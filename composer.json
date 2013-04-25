@@ -1,0 +1,52 @@
+{
+	"name": "wrep/ideal-bundle",
+	"description": "iDeal Bundle for Symfony2",
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "Mathijs Kadijk",
+			"email": "mathijs@wrep.nl"
+		},
+		{
+			"name": "Rick Pastoor",
+			"email": "rick@wrep.nl"
+		}
+	],
+	"require": {
+		"php": ">=5.3.3",
+		"ext-spl": "*",
+		"ext-curl": "*",
+		"ext-sockets": "*",
+		"ext-openssl": "*",
+		"lib-openssl": "*",
+		"ext-simplexml": "*",
+		"symfony/config": ">=2.2",
+		"symfony/dependency-injection": ">=2.2",
+		"kriswallsmith/buzz": ">=v0.9",
+		"cdatazone/xmlseclibs": "dev-master"
+	},
+	"require-dev": {
+		"symfony/yaml": ">=2.2"
+	},
+	"autoload": {
+		"psr-0": { "Wrep\\IDealBundle": "" }
+	},
+	"target-dir": "Wrep/IDealBundle",
+    "repositories": [
+        {
+            "type": "package",
+            "package": {
+                "name": "cdatazone/xmlseclibs",
+                "version": "dev-master",
+                "source": {
+                    "type": "svn",
+                    "url": "http://xmlseclibs.googlecode.com/svn/",
+                    "reference": "trunk/"
+                },
+                "autoload": {
+                    "classmap": ["xmlseclibs.php"]
+                }
+            }
+        }
+    ]
+}
