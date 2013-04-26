@@ -34,7 +34,8 @@ class IDealClient
 	public function __construct($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout = 15)
 	{
 		// Validate the merchant ID, must be a 9 digit or less positive integer
-		if (!is_int($merchantId) || $merchantId < 0) {
+		$merchantId = (int)$merchantId;
+		if (!is_int($merchantId) || $merchantId <= 0) {
 			throw new \RuntimeException('The merchant ID must a positive integer. (' . $merchantId . ')');
 		} else if (strlen($merchantId) > 9) {
 			throw new \RuntimeException('The merchant ID must be 9 digits or less. (' . $merchantId . ')');
@@ -87,9 +88,9 @@ class IDealClient
 	{
 		$xml = $this->createRequest('DirectoryReq');
 		$this->addMerchant($xml);
-		$this->signXml($xml);
+		$xml = $this->signXml($xml);
 
-		echo $xml->asXml();die();
+		$this->post( $xml->asXml() );
 	}
 
 	public function doTransaction()
@@ -103,11 +104,12 @@ class IDealClient
 	}
 
 	protected function post($content)
-	{
+	{echo $content . "\n\n\n\n\n";
 		$headers = array(	'Content-Type' => 'text/xml; charset=”utf-8”',
 							'Accept' => 'text/xml');
 
 		$response = $this->browser->post($this->acquirerUrl, $headers, $content);
+		print_r($response);
 	}
 
 	/**
@@ -138,7 +140,7 @@ class IDealClient
 		$utcTime = new \DateTime('now');
 		$utcTimezone = new \DateTimeZone('UTC');
 		$utcTime->setTimezone($utcTimezone);
-		$timestamp = $utcTime->format(\DateTime::ISO8601);
+		$timestamp = $utcTime->format('Y-m-d\TH:i:s.000\Z');
 
 		// Append the child element
 		return $xml->addChild('createDateTimestamp', $timestamp );
@@ -169,17 +171,27 @@ class IDealClient
 		$doc = new \DOMDocument();
 		$doc->loadXML( $xml->asXml() );
 
-		$objKey = new \XMLSecurityKey(\XMLSecurityKey::RSA_SHA256, array('type' => 'private'));
-		$objKey->loadKey('/Users/mathijs/projecten/1blikagenda/web/src/Blik/AgendaBundle/Resources/ideal/priv_nopwd.key', true);
-
 		$objXMLSecDSig = new \XMLSecurityDSig();
 		$objXMLSecDSig->setCanonicalMethod(\XMLSecurityDSig::EXC_C14N);
 		$objXMLSecDSig->addReference($doc, \XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
-		$objXMLSecDSig->sign($objKey, $doc->documentElement);
 
-		/* Add associated public key */
-		$objXMLSecDSig->add509Cert('/Users/mathijs/projecten/1blikagenda/web/src/Blik/AgendaBundle/Resources/ideal/cert.cer', true, true);
+		$objKey = new \XMLSecurityKey(\XMLSecurityKey::RSA_SHA256, array('type' => 'private'));
+		$objKey->passphrase = $this->merchantCertificatePassphrase;
+		$objKey->loadKey($this->merchantCertificate, true);
 
-		echo $doc->saveXML(); die();
+		$objXMLSecDSig->sign($objKey);
+		$signature = $objXMLSecDSig->appendSignature($doc->documentElement);
+
+		$baseDoc = $signature->ownerDocument;
+		$keyInfo = $baseDoc->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyInfo');
+		$signature->appendChild($keyInfo);
+
+		$thumbprint = \XMLSecurityKey::getRawThumbprint( file_get_contents($this->merchantCertificate) );
+
+		$baseDoc = $keyInfo->ownerDocument;
+		$keyName = $baseDoc->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyName', $thumbprint);
+		$keyInfo->appendChild($keyName);
+
+		return new \SimpleXMLElement( $doc->saveXML() );
 	}
 }
