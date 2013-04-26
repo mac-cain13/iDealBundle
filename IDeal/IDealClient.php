@@ -64,7 +64,7 @@ class IDealClient
 		$this->merchantSubId = (int)$merchantSubId;
 		$this->merchantCertificate = $merchantCertificate;
 		$this->merchantCertificatePassphrase = $merchantCertificatePassphrase;
-		$this->acquirerUrl = rtrim($acquirerUrl, '/');
+		$this->acquirerUrl = $acquirerUrl;
 		$this->acquirerCertificate = $acquirerCertificate;
 
 		// Create a Buzz client and browser
@@ -82,11 +82,10 @@ class IDealClient
 	 */
 	public function fetchIssuerList()
 	{
-		$xml = $this->createRequest('DirectoryReq');
-		$this->addMerchant($xml);
-		$xml = $this->signXml($xml);
+		$message = new IDealMessage('DirectoryReq', $this->merchantCertificate, $this->merchantCertificatePassphrase);
+		$message->addMerchant($this->merchantId, $this->merchantSubId);
 
-		$this->post( $xml->asXml() );
+		$this->sendMessage($message);
 	}
 
 	public function doTransaction()
@@ -99,104 +98,13 @@ class IDealClient
 		;
 	}
 
-	protected function post($content)
+	protected function sendMessage(IDealMessage $message)
 	{
-		$headers = array(	'Content-Type' => 'text/xml; charset=”utf-8”',
-							'Accept' => 'text/xml');
+		$response = $this->browser->post(	$this->acquirerUrl,
+											array('Content-Type' => 'text/xml; charset=”utf-8”', 'Accept' => 'text/xml'),
+											(string)$message);
 
-		$response = $this->browser->post($this->acquirerUrl, $headers, $content);
-	}
-
-	/**
-	 * Adds the xmlns and version attributes to the element
-	 *
-	 * @param string The type of request to create
-	 * @return \SimpleXMLElement The XML element
-	 */
-	protected function createRequest($rootElement)
-	{
-		$xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $rootElement . ' />');
-		$xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
-		$xml->addAttribute('version', '3.3.1');
-		$this->addCreateDateTimestamp($xml);
-
-		return $xml;
-	}
-
-	/**
-	 * Adds the createDateTimestamp element to the XML containing the current time as ISO8601 string with UTC timzone
-	 *
-	 * @param \SimpleXMLElement The XML element to append the child to
-	 * @return \SimpleXMLElement The added createDateTimestamp element
-	 */
-	protected function addCreateDateTimestamp(\SimpleXMLElement $xml)
-	{
-		// Create the UTC ISO8601 timestamp
-		$utcTime = new \DateTime('now');
-		$utcTimezone = new \DateTimeZone('UTC');
-		$utcTime->setTimezone($utcTimezone);
-		$timestamp = $utcTime->format('Y-m-d\TH:i:s.000\Z');
-
-		// Append the child element
-		return $xml->addChild('createDateTimestamp', $timestamp );
-	}
-
-	/**
-	 * Adds the Merchant element, optionally containing the return URL
-	 *
-	 * @param \SimpleXMLElement The XML element to append the child to
-	 * @param string|null Optional, the merchant return URL to add
-	 * @return \SimpleXMLElement The added Merchant element
-	 */
-	protected function addMerchant(\SimpleXMLElement $xml, $merchantReturnURL = null)
-	{
-		$merchant = $xml->addChild('Merchant');
-		$merchant->addChild('merchantID', $this->merchantId);
-		$merchant->addChild('subID', $this->merchantSubId);
-
-		if (null != $merchantReturnURL) {
-			$merchant->addChild('merchantReturnURL', $merchantReturnURL);
-		}
-
-		return $merchant;
-	}
-
-	/**
-	 * Sign the given XML element
-	 *
-	 * @param \SimpleXMLElement The XML element to sign, will not be modified
-	 * @return \SimpleXMLElement A new XML element fully signed
-	 */
-	protected function signXml(\SimpleXMLElement $xml)
-	{
-		// Convert SimpleXMLElement to DOMElement for signing
-		$doc = new \DOMDocument();
-		$doc->loadXML( $xml->asXml() );
-
-		// Decode the private key so we can use it to sign the request
-		$privateKey = new \XMLSecurityKey(\XMLSecurityKey::RSA_SHA256, array('type' => 'private'));
-		$privateKey->passphrase = $this->merchantCertificatePassphrase;
-		$privateKey->loadKey($this->merchantCertificate, true);
-
-		// Create and configure the DSig helper and calculate the signature
-		$xmlDSigHelper = new \XMLSecurityDSig();
-		$xmlDSigHelper->setCanonicalMethod(\XMLSecurityDSig::EXC_C14N);
-		$xmlDSigHelper->addReference($doc, \XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
-		$xmlDSigHelper->sign($privateKey);
-
-		// Append the signature to the XML and save it for modification
-		$signature = $xmlDSigHelper->appendSignature($doc->documentElement);
-
-		// Calculate the fingerprint of the certificate
-		$thumbprint = \XMLSecurityKey::getRawThumbprint( file_get_contents($this->merchantCertificate) );
-
-		// Append the KeyInfo and KeyName elements to the signature
-		$keyInfo = $signature->ownerDocument->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyInfo');
-		$signature->appendChild($keyInfo);
-		$keyName = $keyInfo->ownerDocument->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyName', $thumbprint);
-		$keyInfo->appendChild($keyName);
-
-		// Convert back to SimpleXMLElement and return
-		return new \SimpleXMLElement( $doc->saveXML() );
+		echo $content . "\n\n\n\n\n";
+		print_r($response);
 	}
 }
