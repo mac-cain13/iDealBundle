@@ -7,10 +7,6 @@ use Buzz\Client\Curl;
 
 class IDealClient
 {
-	const XML_DECLARATION = '<?xml version="1.0" encoding="UTF-8"?>';
-	const ROOT_XMLNS = 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1';
-	const ROOT_VERSION = '3.3.1';
-
 	private $merchantId;
 	private $merchantSubId;
 	private $merchantCertificate;
@@ -104,12 +100,11 @@ class IDealClient
 	}
 
 	protected function post($content)
-	{echo $content . "\n\n\n\n\n";
+	{
 		$headers = array(	'Content-Type' => 'text/xml; charset=”utf-8”',
 							'Accept' => 'text/xml');
 
 		$response = $this->browser->post($this->acquirerUrl, $headers, $content);
-		print_r($response);
 	}
 
 	/**
@@ -120,9 +115,9 @@ class IDealClient
 	 */
 	protected function createRequest($rootElement)
 	{
-		$xml = new \SimpleXMLElement(self::XML_DECLARATION . '<' . $rootElement . ' />');
-		$xml->addAttribute('xmlns', self::ROOT_XMLNS);
-		$xml->addAttribute('version', self::ROOT_VERSION);
+		$xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $rootElement . ' />');
+		$xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
+		$xml->addAttribute('version', '3.3.1');
 		$this->addCreateDateTimestamp($xml);
 
 		return $xml;
@@ -166,32 +161,42 @@ class IDealClient
 		return $merchant;
 	}
 
-	private function signXml(\SimpleXMLElement $xml)
+	/**
+	 * Sign the given XML element
+	 *
+	 * @param \SimpleXMLElement The XML element to sign, will not be modified
+	 * @return \SimpleXMLElement A new XML element fully signed
+	 */
+	protected function signXml(\SimpleXMLElement $xml)
 	{
+		// Convert SimpleXMLElement to DOMElement for signing
 		$doc = new \DOMDocument();
 		$doc->loadXML( $xml->asXml() );
 
-		$objXMLSecDSig = new \XMLSecurityDSig();
-		$objXMLSecDSig->setCanonicalMethod(\XMLSecurityDSig::EXC_C14N);
-		$objXMLSecDSig->addReference($doc, \XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
+		// Decode the private key so we can use it to sign the request
+		$privateKey = new \XMLSecurityKey(\XMLSecurityKey::RSA_SHA256, array('type' => 'private'));
+		$privateKey->passphrase = $this->merchantCertificatePassphrase;
+		$privateKey->loadKey($this->merchantCertificate, true);
 
-		$objKey = new \XMLSecurityKey(\XMLSecurityKey::RSA_SHA256, array('type' => 'private'));
-		$objKey->passphrase = $this->merchantCertificatePassphrase;
-		$objKey->loadKey($this->merchantCertificate, true);
+		// Create and configure the DSig helper and calculate the signature
+		$xmlDSigHelper = new \XMLSecurityDSig();
+		$xmlDSigHelper->setCanonicalMethod(\XMLSecurityDSig::EXC_C14N);
+		$xmlDSigHelper->addReference($doc, \XMLSecurityDSig::SHA256, array('http://www.w3.org/2000/09/xmldsig#enveloped-signature'), array('force_uri' => true));
+		$xmlDSigHelper->sign($privateKey);
 
-		$objXMLSecDSig->sign($objKey);
-		$signature = $objXMLSecDSig->appendSignature($doc->documentElement);
+		// Append the signature to the XML and save it for modification
+		$signature = $xmlDSigHelper->appendSignature($doc->documentElement);
 
-		$baseDoc = $signature->ownerDocument;
-		$keyInfo = $baseDoc->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyInfo');
-		$signature->appendChild($keyInfo);
-
+		// Calculate the fingerprint of the certificate
 		$thumbprint = \XMLSecurityKey::getRawThumbprint( file_get_contents($this->merchantCertificate) );
 
-		$baseDoc = $keyInfo->ownerDocument;
-		$keyName = $baseDoc->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyName', $thumbprint);
+		// Append the KeyInfo and KeyName elements to the signature
+		$keyInfo = $signature->ownerDocument->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyInfo');
+		$signature->appendChild($keyInfo);
+		$keyName = $keyInfo->ownerDocument->createElementNS(\XMLSecurityDSig::XMLDSIGNS, 'KeyName', $thumbprint);
 		$keyInfo->appendChild($keyName);
 
+		// Convert back to SimpleXMLElement and return
 		return new \SimpleXMLElement( $doc->saveXML() );
 	}
 }
