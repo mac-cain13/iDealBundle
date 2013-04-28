@@ -120,4 +120,14 @@ zzlNrDZ+npjGy1HsdVPVknS365B1YQMSRam7kX4HuxzfewUnWHpMfrpZfRR8VivMQNCeBb0s/osS
 1tM1ne3QeJa8Mb9npFz9ZdJaenzOzcFY8NV74A==</SignatureValue><KeyInfo><KeyName>FC0A17A7ABD72369726EA4D4DBEF9838128A7C78</KeyName></KeyInfo></Signature></DirectoryRes>', __DIR__ . '/../Resources/aquirer-certificate.cer'),
 			);
 	}
+
+	public function testGetType()
+	{
+		$this->assertEquals('DirectoryRes', $this->response->getType());
+	}
+
+	public function testGetCreationDateTime()
+	{
+		$this->assertEquals('2013-04-28T19:50:23+0000', $this->response->getCreationDateTime()->format(\DateTime::ISO8601));
+	}
 }

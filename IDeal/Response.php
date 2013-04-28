@@ -82,4 +82,30 @@ class Response
 			throw new IDealException('Failed to verify response signature: ' . $e->getMessage(), 0, $e);
 		}
 	}
+
+	/**
+	 * Get the type of response
+	 *
+	 * @return string
+	 */
+	public function getType()
+	{
+		return $this->xml->getName();
+	}
+
+	/**
+	 * Get the moment this response was created on the server
+	 *
+	 * @return \DateTime|null
+	 */
+	public function getCreationDateTime()
+	{
+		$timestamp = (string)$this->xml->createDateTimestamp;
+
+		if (strlen($timestamp) == 0) {
+			return null;
+		} else {
+			return new \DateTime($timestamp);
+		}
+	}
 }
