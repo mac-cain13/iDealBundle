@@ -2,17 +2,17 @@
 
 namespace Wrep\IDealBundle\Tests\IDeal;
 
-use \Wrep\IDealBundle\IDeal\IDealClient;
+use \Wrep\IDealBundle\IDeal\Client;
 
-class IDealClientTest extends \PHPUnit_Framework_TestCase
+class ClientTest extends \PHPUnit_Framework_TestCase
 {
 	/**
 	 * @dataProvider validContructorData
 	 */
 	public function testConstruction($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout)
 	{
-		$iDealClient = new IDealClient($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout);
-		$this->assertEquals('Wrep\IDealBundle\IDeal\IDealClient', get_class($iDealClient), 'Constructed wrong IDealClient');
+		$client = new Client($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout);
+		$this->assertEquals('Wrep\IDealBundle\IDeal\Client', get_class($client), 'Constructed wrong class');
 	}
 
 	public function validContructorData()
@@ -30,7 +30,7 @@ class IDealClientTest extends \PHPUnit_Framework_TestCase
 	public function testInvalidConstruction($exceptionMessage, $merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout)
 	{
 		$this->setExpectedException('\RuntimeException', $exceptionMessage);
-		$iDealClient = new IDealClient($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout);
+		$client = new Client($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout);
 	}
 
 	public function invalidContructorData()
@@ -46,5 +46,11 @@ class IDealClientTest extends \PHPUnit_Framework_TestCase
 				array('The acquirer certificate doesn\'t exists.', 1, 1, __DIR__ . '/../Resources/merchant.pem', 'idealbundle', 'https://idealtest.rabobank.nl/ideal/iDEALv3', 'fakepath', 5),
 				array('The acquirer timout must be above zero.', 1, 1, __DIR__ . '/../Resources/merchant.pem', 'idealbundle', 'https://idealtest.rabobank.nl/ideal/iDEALv3', __DIR__ . '/../Resources/aquirer-certificate.cer', -1),
 			);
+	}
+
+	public function testFetchIssuerList()
+	{
+		$client = new Client('002013009', 0, __DIR__ . '/../Resources/merchant.pem', 'idealbundle', 'https://idealtest.rabobank.nl/ideal/iDEALv3', __DIR__ . '/../Resources/aquirer-certificate.cer', 5);
+		$client->fetchIssuerList();
 	}
 }

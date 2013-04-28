@@ -16,6 +16,7 @@
 		"php": ">=5.3.3",
 		"ext-spl": "*",
 		"ext-curl": "*",
+		"ext-ctype": "*",
 		"ext-sockets": "*",
 		"ext-openssl": "*",
 		"lib-openssl": "*",

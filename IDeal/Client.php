@@ -5,7 +5,7 @@ namespace Wrep\IDealBundle\IDeal;
 use Buzz\Browser;
 use Buzz\Client\Curl;
 
-class IDealClient
+class Client
 {
 	private $merchantId;
 	private $merchantSubId;
@@ -17,7 +17,7 @@ class IDealClient
 	private $browser;
 
 	/**
-	 * Construct an IDealClient
+	 * Construct an Client
 	 *
 	 * @param int Your merchant identifier
 	 * @param int Your merchant sub-identifier, if you don't know this it's probably zero
@@ -60,7 +60,7 @@ class IDealClient
 		}
 
 		// Save the parameters
-		$this->merchantId = sprintf('%09d', $merchantId);
+		$this->merchantId = (int)$merchantId;
 		$this->merchantSubId = (int)$merchantSubId;
 		$this->merchantCertificate = $merchantCertificate;
 		$this->merchantCertificatePassphrase = $merchantCertificatePassphrase;
@@ -82,10 +82,10 @@ class IDealClient
 	 */
 	public function fetchIssuerList()
 	{
-		$message = new IDealMessage('DirectoryReq', $this->merchantCertificate, $this->merchantCertificatePassphrase);
-		$message->addMerchant($this->merchantId, $this->merchantSubId);
+		$request = new Request(Request::TYPE_DIRECTORY, $this->merchantCertificate, $this->merchantCertificatePassphrase);
+		$request->addMerchant($this->merchantId, $this->merchantSubId);
 
-		$this->sendMessage($message);
+		$this->sendRequest($request);
 	}
 
 	public function doTransaction()
@@ -98,13 +98,30 @@ class IDealClient
 		;
 	}
 
-	protected function sendMessage(IDealMessage $message)
+	/**
+	 * Send an Request to the Acquirer, parse the reponse and return an Response
+	 *
+	 * @param Request the request to send
+	 * @return Response the response
+	 */
+	protected function sendRequest(Request $request)
 	{
 		$response = $this->browser->post(	$this->acquirerUrl,
 											array('Content-Type' => 'text/xml; charset=”utf-8”', 'Accept' => 'text/xml'),
-											(string)$message);
+											(string)$request);
 
-		echo $content . "\n\n\n\n\n";
+		// Check if the request was rejected by the acquirer
+		if ( !$response->isSuccessful() ) {
+			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $response->getStatusCode() . ' - ' . $response->getReasonPhrase() );
+		}
+
+		// Parse the content
+		$response->getContent();
+		if ( !$response->isSuccessful() ) {
+			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $response->getStatusCode() . ' - ' . $response->getReasonPhrase() );
+		}
+
+		echo $request . "\n\n\n\n\n";
 		print_r($response);
 	}
 }
