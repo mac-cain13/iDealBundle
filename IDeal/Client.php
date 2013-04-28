@@ -4,6 +4,7 @@ namespace Wrep\IDealBundle\IDeal;
 
 use Buzz\Browser;
 use Buzz\Client\Curl;
+use Wrep\IDealBundle\Exception\IDealException;
 
 class Client
 {
@@ -26,6 +27,8 @@ class Client
 	 * @param string The acquirer URL, can be the URL of a testing environment
 	 * @param string The acquirer certificate, used to verify if we're really connected to the correct acquirer
 	 * @param int Optional timeout in seconds when connecting to the aquirer, default 15 seconds
+	 *
+	 * @throws \RuntimeException if a parameter is invalid
 	 */
 	public function __construct($merchantId, $merchantSubId, $merchantCertificate, $merchantCertificatePassphrase, $acquirerUrl, $acquirerCertificate, $acquirerTimeout = 15)
 	{
@@ -78,14 +81,15 @@ class Client
 	/**
 	 * Fetch the issuer list
 	 *
-	 * @return array Ordered list of IDealIssuers
+	 * @return array Ordered list of Issuer objects
 	 */
 	public function fetchIssuerList()
 	{
 		$request = new Request(Request::TYPE_DIRECTORY, $this->merchantCertificate, $this->merchantCertificatePassphrase);
 		$request->addMerchant($this->merchantId, $this->merchantSubId);
 
-		$this->sendRequest($request);
+		$response = $this->sendRequest($request);
+
 	}
 
 	public function doTransaction()
@@ -102,7 +106,10 @@ class Client
 	 * Send an Request to the Acquirer, parse the reponse and return an Response
 	 *
 	 * @param Request the request to send
+	 *
 	 * @return Response the response
+	 *
+	 * @throws IDealException if something went wrong
 	 */
 	protected function sendRequest(Request $request)
 	{
@@ -116,12 +123,6 @@ class Client
 		}
 
 		// Parse the content
-		$response->getContent();
-		if ( !$response->isSuccessful() ) {
-			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $response->getStatusCode() . ' - ' . $response->getReasonPhrase() );
-		}
-
-		echo $request . "\n\n\n\n\n";
-		print_r($response);
+		return new Response($response->getContent(), $this->acquirerCertificate);
 	}
 }

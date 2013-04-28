@@ -18,7 +18,8 @@ class Request
 	 * @param string The type of request to create, for example DirectoryReq
 	 * @param string Path to your merchant certificate (PEM file)
 	 * @param string|null Optional passphrase for your merchant certificate
-	 * @return \SimpleXMLElement The XML element
+	 *
+	 * @throws \RuntimeException if a parameter is invalid
 	 */
 	public function __construct($requestType, $merchantCertificate, $merchantCertificatePassphrase = null)
 	{
@@ -66,7 +67,10 @@ class Request
 	 * @param int Merchant ID to add
 	 * @param int Optional, Merchant subID to add
 	 * @param string|null Optional, the merchant return URL to add
+	 *
 	 * @return \SimpleXMLElement The added Merchant element
+	 *
+	 * @throws \RuntimeException if a parameter is invalid
 	 */
 	public function addMerchant($merchantId, $merchantSubId = 0, $merchantReturnURL = null)
 	{
