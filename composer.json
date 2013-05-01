@@ -22,7 +22,9 @@
 		"lib-openssl": "*",
 		"ext-simplexml": "*",
 		"symfony/config": ">=2.2",
+		"symfony/console": ">=2.2",
 		"symfony/dependency-injection": ">=2.2",
+		"symfony/framework-bundle": ">=2.2",
 		"kriswallsmith/buzz": ">=v0.9",
 		"cdatazone/xmlseclibs": "dev-master"
 	},
