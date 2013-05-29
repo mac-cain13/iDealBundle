@@ -8,20 +8,33 @@ use Wrep\IDealBundle\Command\GenerateCertificateCommand;
 
 class GenerateCertificateCommandTest extends \PHPUnit_Framework_TestCase
 {
-    public function testExecute()
-    {
-        $kernel = $this->getMock('Symfony\Component\HttpKernel\Kernel', array(), array('prod', false));
+	public function testExecute()
+	{
+		$kernel = $this->getMock('Symfony\Component\HttpKernel\Kernel', array(), array('prod', false));
 
-        $application = new Application($kernel);
-        $application->add( new GenerateCertificateCommand() );
+		$application = new Application($kernel);
+		$application->add( new GenerateCertificateCommand() );
 
-        $command = $application->find('ideal:certificate:generate');
-        $commandTester = new CommandTester($command);
-        echo sys_get_temp_dir();
-        $commandTester->execute( array('command' => $command->getName(), 'path' => tempnam(sys_get_temp_dir(), 'phpunit_')) );
+		$command = $application->find('ideal:certificate:generate');
+		$commandTester = new CommandTester($command);
 
-        $this->assertRegExp('/.../', $commandTester->getDisplay());
+		$dialog = $command->getHelper('dialog');
+		$dialog->setInputStream($this->getInputStream("NL\nFriesland\nSneek\nVoorbeeld Bedrijf\n\n"));
 
-        // ...
-    }
+		$outputPath = tempnam(sys_get_temp_dir(), 'phpunit_'));
+		$commandTester->execute( array('command' => $command->getName(), 'path' => $outputPath);
+
+		$this->assertRegExp('/.../', $commandTester->getDisplay());
+
+		// ...
+	}
+
+	protected function getInputStream($input)
+	{
+		$stream = fopen('php://memory', 'r+', false);
+		fputs($stream, $input);
+		rewind($stream);
+
+		return $stream;
+	}
 }
