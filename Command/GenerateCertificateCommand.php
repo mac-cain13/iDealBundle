@@ -17,6 +17,8 @@ class GenerateCertificateCommand extends ContainerAwareCommand
 	private $organization;
 	private $organizationalUnit;
 
+	private $passphrase;
+
 	protected function configure()
 	{
 		$this->setName('ideal:certificate:generate')
@@ -24,8 +26,8 @@ class GenerateCertificateCommand extends ContainerAwareCommand
 			->setDefinition(array(
 				new InputArgument(
 					'path',
-					InputArgument::REQUIRED,
-					'Location to put the generated certificate in'
+					InputArgument::OPTIONAL,
+					'Folder to put the generated certificate and key in'
 				)
 			));
 	}
@@ -34,11 +36,13 @@ class GenerateCertificateCommand extends ContainerAwareCommand
 	{
 		$dialog = $this->getHelper('dialog');
 
-		$this->country = $dialog->ask($output, 'Country', 'NL');
-		$this->stateOrProvince = $dialog->ask($output, 'State or province', 'Overijssel', array('Friesland', 'Groningen', 'Drenthe', 'Overijssel', 'Gelderland', 'Noord-Brabant', 'Limburg', 'Zeeland', 'Zuid-Holland', 'Noord-Holland'));
-		$this->locality = $dialog->ask($output, 'Locality', 'Zwolle');
-		$this->organization = $dialog->ask($output, 'Organization', 'Wrep');
-		$this->organizationalUnit = $dialog->ask($output, 'Organizational unit', 'iDeal Integration Team');
+		$this->country = $dialog->ask($output, 'Country:', 'NL');
+		$this->stateOrProvince = $dialog->ask($output, 'State or province:', 'Overijssel', array('Friesland', 'Groningen', 'Drenthe', 'Overijssel', 'Gelderland', 'Noord-Brabant', 'Limburg', 'Zeeland', 'Zuid-Holland', 'Noord-Holland'));
+		$this->locality = $dialog->ask($output, 'Locality:', 'Zwolle');
+		$this->organization = $dialog->ask($output, 'Organization:', 'Wrep');
+		$this->organizationalUnit = $dialog->ask($output, 'Organizational unit:', 'iDeal Integration Team');
+
+		$this->passphrase = $dialog->askHiddenResponse($output, 'Passphrase:', true);
 	}
 
 	protected function execute(InputInterface $input, OutputInterface $output)
@@ -51,8 +55,7 @@ class GenerateCertificateCommand extends ContainerAwareCommand
 				'private_key_bits' => 2048,
 				'private_key_type' => OPENSSL_KEYTYPE_RSA
 			));
-		$passphrase = rtrim(base64_encode(openssl_random_pseudo_bytes(mt_rand(9, 15))), '=');
-		openssl_pkey_export($privatekey, $pemPrivatekey, $passphrase);
+		openssl_pkey_export($privatekey, $pemPrivatekey, $this->passphrase);
 
 		$output->writeln(' done');
 
@@ -60,24 +63,28 @@ class GenerateCertificateCommand extends ContainerAwareCommand
 		$output->write('Generating X.509 certificate...');
 
 		$csr = openssl_csr_new(array(
-			"countryName" 				=> $this->country,
-			"stateOrProvinceName" 		=> $this->stateOrProvince,
-			"localityName" 				=> $this->locality,
-			"organizationName" 			=> $this->organization,
-			"organizationalUnitName" 	=> $this->organizationalUnit
+			'countryName' 				=> $this->country,
+			'stateOrProvinceName' 		=> $this->stateOrProvince,
+			'localityName' 				=> $this->locality,
+			'organizationName' 			=> $this->organization,
+			'organizationalUnitName' 	=> $this->organizationalUnit
 		), $privatekey);
 		$certificate = openssl_csr_sign($csr, null, $privatekey, 1825);
-
 		openssl_x509_export($certificate, $x509);
 
 		$output->writeln(' done');
 
-		// Put the certificate on disk
-		$output->write('Exporting iDeal certificate including private key...');
-		file_put_contents($input->getArgument('path'), $x509 . "\n" . $pemPrivatekey);
-		$output->writeln(' done');
+		// Figure out the destination folder
+		$output->write('Exporting iDeal certificate and private key...');
 
-		// And tell what passphrase we used
-		$output->writeln('Used passphrase: ' . $passphrase);
+		$path = getcwd();
+		if ( $input->hasArgument('path') ) {
+			$path = $input->getArgument('path');
+		}
+
+		// Put the certificate on disk
+		file_put_contents($path . '/ideal.cer', $x509);
+		file_put_contents($path . '/ideal.key', $pemPrivatekey);
+		$output->writeln(' done');
 	}
 }

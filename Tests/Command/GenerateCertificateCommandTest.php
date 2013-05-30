@@ -19,14 +19,14 @@ class GenerateCertificateCommandTest extends \PHPUnit_Framework_TestCase
 		$commandTester = new CommandTester($command);
 
 		$dialog = $command->getHelper('dialog');
-		$dialog->setInputStream($this->getInputStream("NL\nFriesland\nSneek\nVoorbeeld Bedrijf\n\n"));
+		$dialog->setInputStream($this->getInputStream("NL\nFriesland\nSneek\nVoorbeeld Bedrijf\npassword\n\n"));
 
-		$outputPath = tempnam(sys_get_temp_dir(), 'phpunit_'));
-		$commandTester->execute( array('command' => $command->getName(), 'path' => $outputPath);
+		$outputPath = sys_get_temp_dir();
+		$commandTester->execute( array('command' => $command->getName(), 'path' => $outputPath) );
 
-		$this->assertRegExp('/.../', $commandTester->getDisplay());
-
-		// ...
+		$this->assertRegExp('/Exporting iDeal certificate and private key... done/', $commandTester->getDisplay());
+		$this->assertRegExp('/-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----/s', file_get_contents($outputPath . '/ideal.cer') );
+		$this->assertRegExp('/-----BEGIN RSA PRIVATE KEY-----.*-----END RSA PRIVATE KEY-----/s', file_get_contents($outputPath . '/ideal.key') );
 	}
 
 	protected function getInputStream($input)
