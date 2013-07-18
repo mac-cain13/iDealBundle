@@ -94,6 +94,16 @@ class Response
 	}
 
 	/**
+	 * Get the response XML
+	 *
+	 * @return \SimpleXMLElement
+	 */
+	public function getXML()
+	{
+		return $this->xml;
+	}
+
+	/**
 	 * Get the moment this response was created on the server
 	 *
 	 * @return \DateTime|null

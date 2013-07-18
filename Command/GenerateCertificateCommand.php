@@ -83,8 +83,9 @@ class GenerateCertificateCommand extends ContainerAwareCommand
 		}
 
 		// Put the certificate on disk
-		file_put_contents($path . '/ideal.cer', $x509);
-		file_put_contents($path . '/ideal.key', $pemPrivatekey);
+		file_put_contents($path . '/ideal_certificate.cer', $x509);
+		file_put_contents($path . '/ideal_key.key', $pemPrivatekey);
+		file_put_contents($path . '/ideal_combined.pem', $x509 . $pemPrivatekey);
 		$output->writeln(' done');
 	}
 }
