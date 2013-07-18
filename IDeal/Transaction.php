@@ -7,6 +7,7 @@ namespace Wrep\IDealBundle\IDeal;
 class Transaction
 {
 	private $transactionId;
+
 	private $purchaseId;
 	private $amount;
 	private $description;
@@ -15,11 +16,15 @@ class Transaction
 	private $language;
 	private $currency;
 
+	private $status;
+
+	// TODO: Met interfaces etc een Transactie maken waarmee je de status op kunt vragen waar niet alle basic info ook weer in moet
 	public function __construct($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, $language = 'nl', $currency = 'EUR')
 	{
 		// TODO: Validation
 
 		$this->transactionId = null;
+
 		$this->purchaseId = $purchaseId;
 		$this->amount = $amount;
 		$this->description = $description;
@@ -27,6 +32,8 @@ class Transaction
 		$this->entranceCode = $entranceCode;
 		$this->language = $language;
 		$this->currency = $currency;
+
+		$this->status = null;
 	}
 
 	public function getTransactionId()
@@ -72,5 +79,15 @@ class Transaction
 	public function getCurrency()
 	{
 		return $this->currency;
+	}
+
+	public function getStatus()
+	{
+		return $this->status;
+	}
+
+	public function setStatus($status)
+	{
+		$this->status = $status;
 	}
 }

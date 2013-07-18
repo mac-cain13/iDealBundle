@@ -117,13 +117,22 @@ class Request
 	public function addTransaction(Transaction $transaction)
 	{
 		$transactionXml = $this->xml->addChild('Transaction');
-		$transactionXml->addChild('purchaseID', $transaction->getPurchaseId() );
-		$transactionXml->addChild('amount', $transaction->getAmount() . '0' );
-		$transactionXml->addChild('currency', $transaction->getCurrency() );
-		$transactionXml->addChild('expirationPeriod', 'PT15M' ); // TODO
-		$transactionXml->addChild('language', $transaction->getLanguage() );
-		$transactionXml->addChild('description', $transaction->getDescription() );
-		$transactionXml->addChild('entranceCode', $transaction->getEntranceCode() );
+
+		// This is ugly! Should be some sort of Request builder to help with this in a nice way
+		if ($transaction->getTransactionId() == null) 
+		{
+			$transactionXml->addChild('purchaseID', $transaction->getPurchaseId() );
+			$transactionXml->addChild('amount', $transaction->getAmount() . '0' );
+			$transactionXml->addChild('currency', $transaction->getCurrency() );
+			$transactionXml->addChild('expirationPeriod', 'PT15M' ); // TODO
+			$transactionXml->addChild('language', $transaction->getLanguage() );
+			$transactionXml->addChild('description', $transaction->getDescription() );
+			$transactionXml->addChild('entranceCode', $transaction->getEntranceCode() );
+		}
+		else
+		{
+			$transactionXml->addChild('transactionID', $transaction->getTransactionId() );
+		}
 
 		return $transactionXml;
 	}

@@ -103,9 +103,11 @@ class Client
 		return $issuers;
 	}
 
-	// TODO: IssuerID class maken die parent is van Issuer zodat je 'm zelf makkelijk kan maken
+	// TODO: IssuerID interface maken die parent is van Issuer zodat je 'm zelf makkelijk kan maken
 	public function doTransaction(Transaction $transaction, Issuer $issuer, $returnUrl)
 	{
+		// TODO: Check of de transactie niet al gestart is
+
 		$request = new Request(Request::TYPE_TRANSACTION, $this->merchantCertificate, $this->merchantCertificatePassphrase);
 		$request->addIssuer($issuer);
 		$request->addMerchant($this->merchantId, $this->merchantSubId, $returnUrl);
@@ -117,13 +119,22 @@ class Client
 		return (string)$response->getXml()->Issuer->issuerAuthenticationURL;
 	}
 
-	public function fetchStatus()
+	// TODO: TransactionID interface maken die parent is van Issuer zodat je 'm zelf makkelijk kan maken
+	public function updateStatus(Transaction $transaction)
 	{
-		;
+		// TODO: Check of de transactie wel een ID heeft
+		$request = new Request(Request::TYPE_STATUS, $this->merchantCertificate, $this->merchantCertificatePassphrase);
+		$request->addMerchant($this->merchantId, $this->merchantSubId);
+		$request->addTransaction($transaction);
+
+		$response = $this->sendRequest($request);
+
+		$transaction->setStatus( (string)$response->getXml()->Transaction->status );
+		// TODO: Andere data ook in de transactie setten
 	}
 
 	/**
-	 * Send an Request to the Acquirer, parse the reponse and return an Response
+	 * Send a Request to the Acquirer, parse the reponse and return a Response
 	 *
 	 * @param Request the request to send
 	 *
@@ -134,13 +145,15 @@ class Client
 	protected function sendRequest(Request $request)
 	{
 		$response = $this->browser->post(	$this->acquirerUrl,
-											array('Content-Type' => 'text/xml; charset=”utf-8”', 'Accept' => 'text/xml'),
+											array('Content-Type' => 'text/xml; charset="utf-8"', 'Accept' => 'text/xml'),
 											(string)$request);
 
 		// Check if the request was rejected by the acquirer
 		if ( !$response->isSuccessful() ) {
 			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $response->getStatusCode() . ' - ' . $response->getReasonPhrase() );
 		}
+
+		// TODO: Check of 't een AcquirerErrorRes-response is, dan hebben we ook een error
 
 		// Parse the content
 		return new Response($response->getContent(), $this->acquirerCertificate);
