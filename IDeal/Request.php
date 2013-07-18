@@ -74,6 +74,7 @@ class Request
 	 */
 	public function addMerchant($merchantId, $merchantSubId = 0, $merchantReturnURL = null)
 	{
+		// TODO: Create Merchant object
 		// Validate the merchant ID, must be a 9 digit or less positive integer
 		$merchantId = (int)$merchantId;
 		if (!is_int($merchantId) || $merchantId <= 0) {
@@ -103,6 +104,28 @@ class Request
 		}
 
 		return $merchant;
+	}
+
+	public function addIssuer(Issuer $issuer)
+	{
+		$issuerXml = $this->xml->addChild('Issuer');
+		$issuerXml->addChild('issuerID', $issuer->getId() );
+
+		return $issuerXml;
+	}
+
+	public function addTransaction(Transaction $transaction)
+	{
+		$transactionXml = $this->xml->addChild('Transaction');
+		$transactionXml->addChild('purchaseID', $transaction->getPurchaseId() );
+		$transactionXml->addChild('amount', $transaction->getAmount() . '0' );
+		$transactionXml->addChild('currency', $transaction->getCurrency() );
+		$transactionXml->addChild('expirationPeriod', 'PT15M' ); // TODO
+		$transactionXml->addChild('language', $transaction->getLanguage() );
+		$transactionXml->addChild('description', $transaction->getDescription() );
+		$transactionXml->addChild('entranceCode', $transaction->getEntranceCode() );
+
+		return $transactionXml;
 	}
 
 	/**

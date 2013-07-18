@@ -90,11 +90,31 @@ class Client
 
 		$response = $this->sendRequest($request);
 
+		// TODO: IssuerResponse maken waar je overheen kunt loopen etc
+		$issuers = array();
+		foreach ($response->getXML()->Directory->Country as $country)
+		{
+			foreach ($country->Issuer as $issuer)
+			{
+				$issuers[] = new Issuer((string)$issuer->issuerID, (string)$issuer->issuerName, (string)$country->countryNames);
+			}
+		}
+
+		return $issuers;
 	}
 
-	public function doTransaction()
+	// TODO: IssuerID class maken die parent is van Issuer zodat je 'm zelf makkelijk kan maken
+	public function doTransaction(Transaction $transaction, Issuer $issuer, $returnUrl)
 	{
-		;
+		$request = new Request(Request::TYPE_TRANSACTION, $this->merchantCertificate, $this->merchantCertificatePassphrase);
+		$request->addIssuer($issuer);
+		$request->addMerchant($this->merchantId, $this->merchantSubId, $returnUrl);
+		$request->addTransaction($transaction);
+
+		$response = $this->sendRequest($request);
+
+		$transaction->setTransactionId((string)$response->getXml()->Transaction->transactionID);
+		return (string)$response->getXml()->Issuer->issuerAuthenticationURL;
 	}
 
 	public function fetchStatus()
