@@ -21,15 +21,15 @@
 		"ext-openssl": "*",
 		"lib-openssl": "*",
 		"ext-simplexml": "*",
-		"symfony/config": ">=2.2",
-		"symfony/console": ">=2.2",
-		"symfony/dependency-injection": ">=2.2",
-		"symfony/framework-bundle": ">=2.2",
+		"symfony/config": ">=2.1",
+		"symfony/console": ">=2.1",
+		"symfony/dependency-injection": ">=2.1",
+		"symfony/framework-bundle": ">=2.1",
 		"kriswallsmith/buzz": ">=v0.9",
 		"cdatazone/xmlseclibs": "dev-master"
 	},
 	"require-dev": {
-		"symfony/yaml": ">=2.2"
+		"symfony/yaml": ">=2.1"
 	},
 	"autoload": {
 		"psr-0": { "Wrep\\IDealBundle": "" }
