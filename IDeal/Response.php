@@ -2,6 +2,7 @@
 
 namespace Wrep\IDealBundle\IDeal;
 
+use Wrep\IDealBundle\IDeal\Acquirer;
 use Wrep\IDealBundle\Exception\IDealException;
 
 class Response
@@ -17,32 +18,34 @@ class Response
 	 * Construct an Response
 	 *
 	 * @param string Response XML from the acquirer
+	 * @param Acquirer|null Acquirer that send this response
 	 *
-	 * @throws IDealException if the signature is invalid or we can't verify it
+	 * @throws IDealException if the signature or XML is invalid
 	 */
-	public function __construct($responseXml, $acquirerCertificate)
+	public function __construct($responseXml, Acquirer $acquirer = null)
 	{
+		// Parse the response XML
 		try {
 			$this->xml = new \SimpleXMLElement($responseXml);
 		} catch (\Exception $e) {
-			throw new \RuntimeException('Invalid response XML: ' . $e->getMessage(), 0, $e);
+			throw new IDealException('Invalid response XML: ' . $e->getMessage(), 0, $e);
 		}
 
-		$this->verifySignature($acquirerCertificate);
+		// Verify the response if we have an acquirer
+		if ($acquirer) {
+			$this->verifySignature($acquirer);
+		}
 	}
 
 	/**
 	 * Verify the signature of the response
 	 *
+	 * @param Acquirer Acquirer that send this response
+	 *
 	 * @throws IDealException if the signature is invalid or we can't verify it
 	 */
-	private function verifySignature($acquirerCertificate)
+	private function verifySignature(Acquirer $acquirer)
 	{
-		// Check if the merchant certificate exists
-		if ( !is_file($acquirerCertificate) ) {
-			throw new \RuntimeException('The acquirer certificate doesn\'t exists. (' . $acquirerCertificate . ')');
-		}
-
 		try
 		{
 			// Convert SimpleXMLElement to DOMElement for verification

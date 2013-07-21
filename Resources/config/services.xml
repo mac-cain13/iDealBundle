@@ -1,0 +1,52 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+	<parameters>
+		<!-- Configuration -->
+		<parameter key="idealbundle.merchant.id"></parameter>
+		<parameter key="idealbundle.merchant.subid"></parameter>
+		<parameter key="idealbundle.merchant.certificatePath"></parameter>
+		<parameter key="idealbundle.merchant.certificatePassphrase"></parameter>
+
+		<parameter key="idealbundle.acquirer.url"></parameter>
+		<parameter key="idealbundle.acquirer.certificatePath"></parameter>
+
+		<parameter key="idealbundle.client.timeout"></parameter>
+
+		<!-- Classes -->
+		<parameter key="idealbundle.merchant.class">Wrep\IDealBundle\IDeal\Merchant</parameter>
+		<parameter key="idealbundle.acquirer.class">Wrep\IDealBundle\IDeal\Acquirer</parameter>
+		<parameter key="idealbundle.client.class">Wrep\IDealBundle\IDeal\Client</parameter>
+		<parameter key="idealbundle.cachemanager.issuer.class">Wrep\IDealBundle\CacheManager\IssuerCacheManager</parameter>
+	</parameters>
+
+	<services>
+		<!-- Classes for more advanced use -->
+		<service id="idealbundle.merchant" class="%idealbundle.merchant.class%">
+			<argument>%idealbundle.merchant.id%</argument>
+			<argument>%idealbundle.merchant.subid%</argument>
+			<argument>%idealbundle.merchant.certificatePath%</argument>
+			<argument>%idealbundle.merchant.certificatePassphrase%</argument>
+		</service>
+
+		<service id="idealbundle.acquirer" class="%idealbundle.acquirer.class%">
+			<argument>%idealbundle.acquirer.url%</argument>
+			<argument>%idealbundle.acquirer.certificatePath%</argument>
+		</service>
+
+		<service id="idealbundle.client" class="%idealbundle.client.class%">
+			<argument type="service" id="idealbundle.merchant" />
+			<argument type="service" id="idealbundle.acquirer" />
+			<argument>%idealbundle.client.timeout%</argument>
+		</service>
+
+		<service id="idealbundle.cachemanager.issuer" class="%idealbundle.cachemanager.issuer.class%">
+			<tag name="kernel.cache_warmer" />
+			<tag name="kernel.cache_clearer" />
+			<argument type="service" id="idealbundle.client" />
+		</service>
+	</services>
+</container>

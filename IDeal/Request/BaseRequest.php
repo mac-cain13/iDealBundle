@@ -1,27 +1,30 @@
 <?php
 
-namespace Wrep\IDealBundle\IDeal;
+namespace Wrep\IDealBundle\IDeal\Request;
 
-class Request
+use Wrep\IDealBundle\IDeal\Merchant;
+use Wrep\IDealBundle\IDeal\IssuerId;
+
+abstract class BaseRequest
 {
 	const TYPE_DIRECTORY = 'DirectoryReq';
 	const TYPE_TRANSACTION = 'AcquirerTrxReq';
 	const TYPE_STATUS = 'AcquirerStatusReq';
 
-	private $xml;
-	private $merchantCertificate;
-	private $merchantCertificatePassphrase;
+	private $issuer;
+	private $merchant;
+	private $transaction;
+	private $returnUrl;
 
 	/**
 	 * Construct an Request
 	 *
 	 * @param string The type of request to create, for example DirectoryReq
-	 * @param string Path to your merchant certificate (PEM file)
-	 * @param string|null Optional passphrase for your merchant certificate
+	 * @param Merchant The merchant issuing this request
 	 *
 	 * @throws \RuntimeException if a parameter is invalid
 	 */
-	public function __construct($requestType, $merchantCertificate, $merchantCertificatePassphrase = null)
+	public function __construct($requestType, Merchant $merchant)
 	{
 		if ($requestType == null) {
 			throw new \RuntimeException('No request type given.');
@@ -29,20 +32,45 @@ class Request
 			throw new \RuntimeException('Request type must be alphanumeric. (' . $requestType . ')');
 		}
 
-		// Check if the merchant certificate exists
-		if ( !is_file($merchantCertificate) ) {
-			throw new \RuntimeException('The merchant certificate doesn\'t exists. (' . $merchantCertificate . ')');
-		}
-
 		// Create the basic XML structure
 		$this->xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $requestType . ' />');
 		$this->xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
 		$this->xml->addAttribute('version', '3.3.1');
+
+		// Add the creation timestamp
 		$this->addCreateDateTimestamp();
 
-		// Save the certificate info
-		$this->merchantCertificate = $merchantCertificate;
-		$this->merchantCertificatePassphrase = $merchantCertificatePassphrase;
+		// Add the merchant
+		$this->setMerchant($merchant);
+	}
+
+	protected function setIssuer(IssuerId $issuer)
+	{
+		$this->issuer = $issuer;
+	}
+
+	protected function setMerchant(Merchant $merchant)
+	{
+		if (null == $merchant) {
+			throw new \RuntimeException('Merchant cannot be null.');
+		}
+
+		$this->merchant = $merchant;
+	}
+
+	protected function setTransaction(Transaction $transaction)
+	{
+		$this->transaction = $transaction;
+	}
+
+	protected function setReturnUrl($returnUrl)
+	{
+		// Validate the merchant return URL
+		if ( strlen((string)$returnURL) > 512 ) {
+			throw new \RuntimeException('The merchant return URL must be a string of 512 characters or less. (' . (string)$returnURL . ')');
+		}
+
+		$this->returnUrl = $returnUrl;
 	}
 
 	/**
@@ -72,35 +100,14 @@ class Request
 	 *
 	 * @throws \RuntimeException if a parameter is invalid
 	 */
-	public function addMerchant($merchantId, $merchantSubId = 0, $merchantReturnURL = null)
+	public function addMerchantElement(\SimpleXMLElement $xml)
 	{
-		// TODO: Create Merchant object
-		// Validate the merchant ID, must be a 9 digit or less positive integer
-		$merchantId = (int)$merchantId;
-		if (!is_int($merchantId) || $merchantId <= 0) {
-			throw new \RuntimeException('The merchant ID must a positive integer. (' . $merchantId . ')');
-		} else if (strlen($merchantId) > 9) {
-			throw new \RuntimeException('The merchant ID must be 9 digits or less. (' . $merchantId . ')');
-		}
-
-		// Validate the merchant sub-identifier
-		if (!is_int($merchantSubId) || $merchantSubId < 0) {
-			throw new \RuntimeException('The merchant subID must a positive integer. (' . $merchantSubId . ')');
-		} else if (strlen($merchantSubId) > 6) {
-			throw new \RuntimeException('The merchant subID must be 6 digits or less. (' . $merchantSubId . ')');
-		}
-
-		// Validate the merchant return URL
-		if ( strlen((string)$merchantReturnURL) > 512 ) {
-			throw new \RuntimeException('The merchant return URL must be a string of 512 characters or less. (' . (string)$merchantReturnURL . ')');
-		}
-
 		$merchant = $this->xml->addChild('Merchant');
 		$merchant->addChild('merchantID', sprintf('%09d', $merchantId) );
 		$merchant->addChild('subID', $merchantSubId);
 
-		if (null != $merchantReturnURL) {
-			$merchant->addChild('merchantReturnURL', $merchantReturnURL);
+		if (null != $returnURL) {
+			$merchant->addChild('merchantReturnURL', $returnURL);
 		}
 
 		return $merchant;
@@ -119,7 +126,7 @@ class Request
 		$transactionXml = $this->xml->addChild('Transaction');
 
 		// This is ugly! Should be some sort of Request builder to help with this in a nice way
-		if ($transaction->getTransactionId() == null) 
+		if ($transaction->getTransactionId() == null)
 		{
 			$transactionXml->addChild('purchaseID', $transaction->getPurchaseId() );
 			$transactionXml->addChild('amount', $transaction->getAmount() . '0' );
@@ -175,12 +182,18 @@ class Request
 		return new \SimpleXMLElement( $xml->saveXML() );
 	}
 
+	public function getHeaders()
+	{
+		return array(	'Content-Type'	=> 'text/xml; charset="utf-8"',
+						'Accept'		=> 'text/xml');
+	}
+
 	/**
 	 * The fully signed message as XML string
 	 *
 	 * @return string
 	 */
-	public function __toString()
+	public function getContent()
 	{
 		return $this->getSignedXmlElement()->asXml();
 	}
