@@ -5,6 +5,7 @@ namespace Wrep\IDealBundle\IDeal;
 use Buzz\Browser;
 use Buzz\Client\Curl;
 use Wrep\IDealBundle\Exception\IDealException;
+use Wrep\IDealBundle\IDeal\Request\DirectoryRequest;
 
 class Client
 {
@@ -48,12 +49,10 @@ class Client
 	 */
 	public function fetchIssuerList()
 	{
-		$request = new Request(Request::TYPE_DIRECTORY, $this->merchantCertificate, $this->merchantCertificatePassphrase);
-		$request->addMerchant($this->merchantId, $this->merchantSubId);
-
+		$request = new DirectoryRequest($this->merchant);
 		$response = $this->sendRequest($request);
 
-		// TODO: IssuerResponse maken waar je overheen kunt loopen etc
+		// TODO: DirectoryResponse maken waar je overheen kunt loopen etc
 		$issuers = array();
 		foreach ($response->getXML()->Directory->Country as $country)
 		{
@@ -107,18 +106,22 @@ class Client
 	 */
 	protected function sendRequest(Request $request)
 	{
-		$response = $this->browser->post(	$this->acquirerUrl,
+		$rawResponse = $this->browser->post($this->acquirerUrl,
 											$request->getHeaders(),
 											$request->getContent() );
 
 		// Check if the request was rejected by the acquirer
-		if ( !$response->isSuccessful() ) {
-			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $response->getStatusCode() . ' - ' . $response->getReasonPhrase() );
+		if ( !$rawResponse->isSuccessful() ) {
+			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $rawResponse->getStatusCode() . ' - ' . $rawResponse->getReasonPhrase() );
 		}
 
-		// TODO: Check of 't een AcquirerErrorRes-response is, dan hebben we ook een error
+		// Check if the acquirer responded with an error
+		$response = new Response($rawResponse->getContent(), $this->acquirerCertificate);
 
-		// Parse the content
-		return new Response($response->getContent(), $this->acquirerCertificate);
+		if ($response->getType() == Response::TYPE_ERROR) {
+			throw new IDealException( 'The iDeal acquirer responded with an error response #' . $response->getXml()->? . ' - ' . $response->getXml()->? ); // TODO
+		}
+
+		return $response;
 	}
 }

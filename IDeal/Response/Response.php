@@ -76,11 +76,14 @@ class Response
 			if ( !$xmlDSigHelper->verify($publicKey) ) {
 				throw new IDealException('Failed to verify response signature: Signature invalid');
 			}
-
-		} catch (IDealException $e) {
+		}
+		catch (IDealException $e)
+		{
 			// Rethrow IDealExceptions
 			throw $e;
-		} catch (\Exception $e) {
+		}
+		catch (\Exception $e)
+		{
 			// Some verification methods throw exceptions by themself, we'll rethrow these
 			throw new IDealException('Failed to verify response signature: ' . $e->getMessage(), 0, $e);
 		}

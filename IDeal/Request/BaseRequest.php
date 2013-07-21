@@ -11,6 +11,7 @@ abstract class BaseRequest
 	const TYPE_TRANSACTION = 'AcquirerTrxReq';
 	const TYPE_STATUS = 'AcquirerStatusReq';
 
+	private $requestType;
 	private $issuer;
 	private $merchant;
 	private $transaction;
@@ -26,21 +27,15 @@ abstract class BaseRequest
 	 */
 	public function __construct($requestType, Merchant $merchant)
 	{
+		// Validate request type
 		if ($requestType == null) {
 			throw new \RuntimeException('No request type given.');
 		} else if ( !ctype_alnum($requestType) ) {
 			throw new \RuntimeException('Request type must be alphanumeric. (' . $requestType . ')');
 		}
 
-		// Create the basic XML structure
-		$this->xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $requestType . ' />');
-		$this->xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
-		$this->xml->addAttribute('version', '3.3.1');
-
-		// Add the creation timestamp
-		$this->addCreateDateTimestamp();
-
-		// Add the merchant
+		// Save properties
+		$this->requestType = $requestType;
 		$this->setMerchant($merchant);
 	}
 
@@ -67,7 +62,7 @@ abstract class BaseRequest
 	{
 		// Validate the merchant return URL
 		if ( strlen((string)$returnURL) > 512 ) {
-			throw new \RuntimeException('The merchant return URL must be a string of 512 characters or less. (' . (string)$returnURL . ')');
+			throw new \RuntimeException('The merchant return URL must be a string of 512 characters or less. (' . $returnURL . ')');
 		}
 
 		$this->returnUrl = $returnUrl;
@@ -89,57 +84,42 @@ abstract class BaseRequest
 		return $this->xml->addChild('createDateTimestamp', $timestamp);
 	}
 
-	/**
-	 * Adds the Merchant element, optionally containing the return URL
-	 *
-	 * @param int Merchant ID to add
-	 * @param int Optional, Merchant subID to add
-	 * @param string|null Optional, the merchant return URL to add
-	 *
-	 * @return \SimpleXMLElement The added Merchant element
-	 *
-	 * @throws \RuntimeException if a parameter is invalid
-	 */
-	public function addMerchantElement(\SimpleXMLElement $xml)
+	public function addIssuerElement(\SimpleXMLElement $xml)
 	{
-		$merchant = $this->xml->addChild('Merchant');
-		$merchant->addChild('merchantID', sprintf('%09d', $merchantId) );
-		$merchant->addChild('subID', $merchantSubId);
-
-		if (null != $returnURL) {
-			$merchant->addChild('merchantReturnURL', $returnURL);
-		}
-
-		return $merchant;
-	}
-
-	public function addIssuer(Issuer $issuer)
-	{
-		$issuerXml = $this->xml->addChild('Issuer');
-		$issuerXml->addChild('issuerID', $issuer->getId() );
+		$issuerXml = $xml->addChild('Issuer');
+		$issuerXml->addChild('issuerID', $this->issuer->getId() );
 
 		return $issuerXml;
 	}
 
-	public function addTransaction(Transaction $transaction)
+	/**
+	 * Adds the Merchant element, optionally containing the return URL
+	 *
+	 * @return \SimpleXMLElement The added Merchant element
+	 */
+	public function addMerchantElement(\SimpleXMLElement $xml)
 	{
-		$transactionXml = $this->xml->addChild('Transaction');
+		$merchantXml = $xml->addChild('Merchant');
+		$merchantXml->addChild('merchantID', sprintf('%09d', $this->merchant->getId()) );
+		$merchantXml->addChild('subID', $this->merchant->getSubId() );
 
-		// This is ugly! Should be some sort of Request builder to help with this in a nice way
-		if ($transaction->getTransactionId() == null)
-		{
-			$transactionXml->addChild('purchaseID', $transaction->getPurchaseId() );
-			$transactionXml->addChild('amount', $transaction->getAmount() . '0' );
-			$transactionXml->addChild('currency', $transaction->getCurrency() );
-			$transactionXml->addChild('expirationPeriod', 'PT15M' ); // TODO
-			$transactionXml->addChild('language', $transaction->getLanguage() );
-			$transactionXml->addChild('description', $transaction->getDescription() );
-			$transactionXml->addChild('entranceCode', $transaction->getEntranceCode() );
+		if (null != $returnURL) {
+			$merchantXml->addChild('merchantReturnURL', $this->returnUrl);
 		}
-		else
-		{
-			$transactionXml->addChild('transactionID', $transaction->getTransactionId() );
-		}
+
+		return $merchantXml;
+	}
+
+	public function addTransactionElement(\SimpleXMLElement $xml)
+	{
+		$transactionXml = $xml->addChild('Transaction');
+		$transactionXml->addChild('purchaseID', $this->transaction->getPurchaseId() );
+		$transactionXml->addChild('amount', $this->transaction->getAmount() );
+		$transactionXml->addChild('currency', $this->transaction->getCurrency() );
+		$transactionXml->addChild('expirationPeriod', $this->transaction->getExpirationPeriod()->format('P%yY%mM%dDT%hH%iM%sS') );
+		$transactionXml->addChild('language', $this->transaction->getLanguage() );
+		$transactionXml->addChild('description', $this->transaction->getDescription() );
+		$transactionXml->addChild('entranceCode', $this->transaction->getEntranceCode() );
 
 		return $transactionXml;
 	}
@@ -149,7 +129,7 @@ abstract class BaseRequest
 	 *
 	 * @return \SimpleXMLElement A signed version of this message
 	 */
-	protected function getSignedXmlElement()
+	protected function signXml()
 	{
 		// Convert SimpleXMLElement to DOMElement for signing
 		$xml = new \DOMDocument();
@@ -184,8 +164,8 @@ abstract class BaseRequest
 
 	public function getHeaders()
 	{
-		return array(	'Content-Type'	=> 'text/xml; charset="utf-8"',
-						'Accept'		=> 'text/xml');
+		return array('Content-Type'	=> 'text/xml; charset="utf-8"',
+					 'Accept'		=> 'text/xml');
 	}
 
 	/**
@@ -195,6 +175,27 @@ abstract class BaseRequest
 	 */
 	public function getContent()
 	{
-		return $this->getSignedXmlElement()->asXml();
+		// Create the basic XML structure
+		$xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $this->requestType . ' />');
+		$xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
+		$xml->addAttribute('version', '3.3.1');
+
+		// Add the creation timestamp
+		$this->addCreateDateTimestamp();
+
+		// Add other elements
+		if ($this->issuer) {
+			$this->addIssuerElement($xml);
+		}
+
+		if ($this->merchant) {
+			$this->addMerchantElement($xml);
+		}
+
+		if ($this->transaction) {
+			$this->addTransactionElement($xml);
+		}
+
+		return $this->signXml($xml)->asXML();
 	}
 }
