@@ -119,7 +119,7 @@ class Client
 		$response = new Response($rawResponse->getContent(), $this->acquirerCertificate);
 
 		if ($response->getType() == Response::TYPE_ERROR) {
-			throw new IDealException( 'The iDeal acquirer responded with an error response #' . $response->getXml()->Error->errorCode . ' - ' . $response->getXml()->Error->errorMessage . ' (' $response->getXml()->Error->errorDetail . ')' );
+			throw new IDealException( 'The iDeal acquirer responded with an error response #' . $response->getXml()->Error->errorCode . ' - ' . $response->getXml()->Error->errorMessage . ' (' . $response->getXml()->Error->errorDetail . ')' );
 		}
 
 		return $response;
