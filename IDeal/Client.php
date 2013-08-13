@@ -144,18 +144,23 @@ class Client
 	 */
 	protected function sendRequest(Request $request)
 	{
-		$response = $this->browser->post(	$this->acquirerUrl,
+		$rawResponse = $this->browser->post(	$this->acquirerUrl,
 											array('Content-Type' => 'text/xml; charset="utf-8"', 'Accept' => 'text/xml'),
 											(string)$request);
 
 		// Check if the request was rejected by the acquirer
-		if ( !$response->isSuccessful() ) {
-			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $response->getStatusCode() . ' - ' . $response->getReasonPhrase() );
+		if ( !$rawResponse->isSuccessful() ) {
+			throw new IDealException( 'The iDeal acquirer responded with HTTP statuscode #' . $rawResponse->getStatusCode() . ' - ' . $rawResponse->getReasonPhrase() );
 		}
 
-		// TODO: Check of 't een AcquirerErrorRes-response is, dan hebben we ook een error
+		// Check if the acquirer responded with an error
+		$response = new Response($rawResponse->getContent(), $this->acquirerCertificate);
+
+		if ($response->getType() == Response::TYPE_ERROR) {
+			throw new IDealException( 'The iDeal acquirer responded with an error response #' . $response->getXml()->Error->errorCode . ' - ' . $response->getXml()->Error->errorMessage . ' (' . $response->getXml()->Error->errorDetail . ')' );
+		}
 
 		// Parse the content
-		return new Response($response->getContent(), $this->acquirerCertificate);
+		return $response;
 	}
 }
