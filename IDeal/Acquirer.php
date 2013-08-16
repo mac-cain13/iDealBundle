@@ -9,9 +9,8 @@ class Acquirer
 
 	public function __construct($url, $certificatePath)
 	{
-		$this->setId($id);
-		$this->setSubId($subId);
-		$this->setCertificate($certificatePath, $certificatePassphrase);
+		$this->setUrl($url);
+		$this->setCertificate($certificatePath);
 	}
 
 	public function getUrl()
