@@ -25,8 +25,8 @@ class GenerateCertificateCommandTest extends \PHPUnit_Framework_TestCase
 		$commandTester->execute( array('command' => $command->getName(), 'path' => $outputPath) );
 
 		$this->assertRegExp('/Exporting iDeal certificate and private key... done/', $commandTester->getDisplay());
-		$this->assertRegExp('/-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----/s', file_get_contents($outputPath . '/ideal.cer') );
-		$this->assertRegExp('/-----BEGIN RSA PRIVATE KEY-----.*-----END RSA PRIVATE KEY-----/s', file_get_contents($outputPath . '/ideal.key') );
+		$this->assertRegExp('/-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----/s', file_get_contents($outputPath . '/ideal_certificate.cer') );
+		$this->assertRegExp('/-----BEGIN RSA PRIVATE KEY-----.*-----END RSA PRIVATE KEY-----/s', file_get_contents($outputPath . '/ideal_key.key') );
 		$this->assertRegExp('/-----BEGIN CERTIFICATE-----.*-----END CERTIFICATE-----.*-----BEGIN RSA PRIVATE KEY-----.*-----END RSA PRIVATE KEY-----/s', file_get_contents($outputPath . '/ideal_combined.pem') );
 	}
 

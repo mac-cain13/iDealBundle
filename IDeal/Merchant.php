@@ -2,6 +2,8 @@
 
 namespace Wrep\IDealBundle\IDeal;
 
+use Wrep\IDealBundle\Exception\InvalidArgumentException;
+
 class Merchant
 {
 	private $id;
@@ -26,9 +28,9 @@ class Merchant
 		// Validate the merchant ID, must be a 9 digit or less positive integer
 		$id = (int)$id;
 		if (!is_int($id) || $id <= 0) {
-			throw new \RuntimeException('The merchant ID must a positive integer. (' . $id . ')');
+			throw new InvalidArgumentException('The merchant ID must a positive integer. (' . $id . ')');
 		} else if (strlen($id) > 9) {
-			throw new \RuntimeException('The merchant ID must be 9 digits or less. (' . $id . ')');
+			throw new InvalidArgumentException('The merchant ID must be 9 digits or less. (' . $id . ')');
 		}
 
 		$this->id = $id;
@@ -42,16 +44,19 @@ class Merchant
 	protected function setSubId($subId)
 	{
 		// Validate the merchant sub-identifier
+		$subId = (int)$subId;
 		if (!is_int($subId) || $subId < 0) {
-			throw new \RuntimeException('The merchant subID must a positive integer. (' . $subId . ')');
+			throw new InvalidArgumentException('The merchant subID must a positive integer. (' . $subId . ')');
 		} else if (strlen($subId) > 6) {
-			throw new \RuntimeException('The merchant subID must be 6 digits or less. (' . $subId . ')');
+			throw new InvalidArgumentException('The merchant subID must be 6 digits or less. (' . $subId . ')');
 		}
+
+		$this->subId = $subId;
 	}
 
 	public function getCertificate()
 	{
-		return $this->certificate;
+		return $this->certificatePath;
 	}
 
 	public function getCertificatePassphrase()
@@ -63,7 +68,7 @@ class Merchant
 	{
 		// Check if the merchant certificate exists
 		if ( !is_file($path) ) {
-			throw new \RuntimeException('The merchant certificate doesn\'t exists. (' . $path . ')');
+			throw new InvalidArgumentException('The merchant certificate doesn\'t exists. (' . $path . ')');
 		}
 
 		$this->certificatePath = $path;
