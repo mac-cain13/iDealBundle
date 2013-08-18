@@ -2,10 +2,12 @@
 
 namespace Wrep\IDealBundle\IDeal;
 
+use Wrep\IDealBundle\Exception\InvalidArgumentException;
+
 class Acquirer
 {
 	private $url;
-	private $certificate;
+	private $certificatePath;
 
 	public function __construct($url, $certificatePath)
 	{
@@ -20,21 +22,25 @@ class Acquirer
 
 	protected function setUrl($url)
 	{
+		if ( !filter_var($url, FILTER_VALIDATE_URL) ) {
+			throw new InvalidArgumentException('The acquirer URL isn\'t a valid URL. (' . $url . ')');
+		}
+
 		$this->url = $url;
 	}
 
 	public function getCertificate()
 	{
-		return $this->certificate;
+		return $this->certificatePath;
 	}
 
 	protected function setCertificate($path)
 	{
 		// Check if the merchant certificate exists
 		if ( !is_file($path) ) {
-			throw new \RuntimeException('The acquirer certificate doesn\'t exists. (' . $path . ')');
+			throw new InvalidArgumentException('The acquirer certificate doesn\'t exists. (' . $path . ')');
 		}
 
-		$this->certificate = $path;
+		$this->certificatePath = $path;
 	}
 }
