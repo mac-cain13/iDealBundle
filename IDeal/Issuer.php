@@ -2,25 +2,24 @@
 
 namespace Wrep\IDealBundle\IDeal;
 
-class Issuer extends IssuerId
+class Issuer
 {
+	private $bic;
 	private $name;
-	private $country;
 
-	public function __construct($id, $name, $country)
+	public function __construct(BIC $bic, $name)
 	{
-		parent::__construct($id);
+		$this->bic = $bic;
 		$this->name = $name;
-		$this->country = $country;
+	}
+
+	public function getBIC()
+	{
+		return $this->bic;
 	}
 
 	public function getName()
 	{
 		return $this->name;
-	}
-
-	public function getCountry()
-	{
-		return $this->country;
 	}
 }
