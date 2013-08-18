@@ -69,6 +69,16 @@ class BICTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @dataProvider validConstructorData
 	 */
+	public function testGetCode($code)
+	{
+		$bic = new BIC($code);
+
+		$this->assertEquals( strtoupper($code), $bic->getCode() );
+	}
+
+	/**
+	 * @dataProvider validConstructorData
+	 */
 	public function testToString($code)
 	{
 		$bic = new BIC($code);

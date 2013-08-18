@@ -10,6 +10,16 @@ class BIC
 
 	public function __construct($code)
 	{
+		$this->setCode($code);
+	}
+
+	public function getCode()
+	{
+		return $this->code;
+	}
+
+	protected function setCode($code)
+	{
 		$code = strtoupper($code);
 		if (preg_match('/^([A-Z]){6}([0-9A-Z]){2}([0-9A-Z]{3})?$/', $code) == 0) {
 			throw new InvalidArgumentException('The given BIC isn\'t valid. (' . $code . ')');
@@ -20,6 +30,6 @@ class BIC
 
 	public function __toString()
 	{
-		return $this->code;
+		return $this->getCode();
 	}
 }
