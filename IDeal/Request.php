@@ -122,7 +122,7 @@ class Request
 		if ($transaction->getTransactionId() == null) 
 		{
 			$transactionXml->addChild('purchaseID', $transaction->getPurchaseId() );
-			$transactionXml->addChild('amount', $transaction->getAmount() . '0' );
+			$transactionXml->addChild('amount', $transaction->getAmount() );
 			$transactionXml->addChild('currency', $transaction->getCurrency() );
 			$transactionXml->addChild('expirationPeriod', 'PT15M' ); // TODO
 			$transactionXml->addChild('language', $transaction->getLanguage() );
