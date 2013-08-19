@@ -51,6 +51,8 @@ class BICTest extends \PHPUnit_Framework_TestCase
 	{
 		return array(
 			array(null),
+			array( array(1 => 'foo') ),
+			array( new \StdClass() ),
 
 			array('BNANL2A'),
 			array('ABNANL2A1'),

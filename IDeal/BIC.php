@@ -20,6 +20,10 @@ class BIC
 
 	protected function setCode($code)
 	{
+		if ( !is_string($code) ) {
+			throw new InvalidArgumentException('The given BIC isn\'t a string.');
+		}
+
 		$code = strtoupper($code);
 		if (preg_match('/^([A-Z]){6}([0-9A-Z]){2}([0-9A-Z]{3})?$/', $code) == 0) {
 			throw new InvalidArgumentException('The given BIC isn\'t valid. (' . $code . ')');
