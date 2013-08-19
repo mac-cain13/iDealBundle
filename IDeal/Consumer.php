@@ -24,6 +24,14 @@ class Consumer
 
 	protected function setName($name)
 	{
+		if ( $name !== null && !is_string($name) ) {
+			throw new InvalidArgumentException('Name must be a string.');
+		}
+
+		if ( empty($name) ) {
+			$name = null;
+		}
+
 		$this->name = $name;
 	}
 
@@ -34,6 +42,14 @@ class Consumer
 
 	protected function setIban($iban)
 	{
+		if ( $iban !== null && !is_string($iban) ) {
+			throw new InvalidArgumentException('IBAN must be a string.');
+		}
+
+		if ( empty($iban) ) {
+			$iban = null;
+		}
+
 		$this->iban = $iban;
 	}
 
@@ -45,5 +61,10 @@ class Consumer
 	protected function setBIC(BIC $bic = null)
 	{
 		$this->bic = $bic;
+	}
+
+	public function isEmpty()
+	{
+		return ($this->getBIC() == null && $this->getIban() == null && $this->getName() == null);
 	}
 }
