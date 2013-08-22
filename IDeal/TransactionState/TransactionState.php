@@ -16,6 +16,7 @@ interface TransactionState
 	public function __construct(\DateTime $timestamp);
 
 	public function getTimestamp();
+	public function getTransactionId();
 	public function getConsumer();
 	public function __toString();
 

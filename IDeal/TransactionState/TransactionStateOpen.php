@@ -8,10 +8,12 @@ use Wrep\IDealBundle\Exception\LogicException;
 class TransactionStateOpen implements TransactionState
 {
 	private $timestamp;
+	private $transactionId;
 
-	public function __construct(\DateTime $timestamp)
+	public function __construct(\DateTime $timestamp, $transactionId)
 	{
 		$this->timestamp = $timestamp;
+		$this->transactionId = $transactionId;
 	}
 
 	public function getTimestamp()

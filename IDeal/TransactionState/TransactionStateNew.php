@@ -31,7 +31,7 @@ class TransactionStateNew implements TransactionState
 
 	public function setOpen(\DateTime $timestamp, $transactionId)
 	{
-		return new TransactionStateOpen($timestamp);
+		return new TransactionStateOpen($timestamp, $transactionId);
 	}
 
 	public function setSuccess(\DateTime $timestamp, Consumer $consumer = null)
