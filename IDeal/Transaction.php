@@ -2,6 +2,8 @@
 
 namespace Wrep\IDealBundle\IDeal;
 
+use Wrep\IDealBundle\Exception\InvalidArgumentException;
+
 use Wrep\IDealBundle\IDeal\TransactionState\TransactionState;
 use Wrep\IDealBundle\IDeal\TransactionState\TransactionStateNew;
 
@@ -17,24 +19,21 @@ class Transaction
 	private $language;
 	private $currency;
 
-	// TODO: Met interfaces etc een Transactie maken waarmee je de status op kunt vragen waar niet alle basic info ook weer in moet
-	public function __construct($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, $language = 'nl', $currency = 'EUR', TransactionState $initialState = null)
+	public function __construct($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
 	{
-		if (null == $initialState)
-		{
+		if (null == $initialState) {
 			$initialState = new TransactionStateNew( new \DateTime() );
 		}
 
 		$this->setState($initialState);
+		$this->setPurchaseId($purchaseId);
+		$this->setAmount($amount);
+		$this->setDescription($description);
+		$this->setExpirationPeriod($expirationPeriod);
 
-		// TODO: Validation
-		$this->purchaseId = $purchaseId;
-		$this->amount = $amount;
-		$this->description = $description;
-		$this->expirationPeriod = $expirationPeriod;
-		$this->entranceCode = $entranceCode;
-		$this->language = $language;
-		$this->currency = $currency;
+		// TODO: Deze kunnen nu nog vast zijn, kan toch niks anders zijn...
+		$this->language = 'nl';
+		$this->currency = 'EUR';
 	}
 
 	public function getPurchaseId()
@@ -42,9 +41,27 @@ class Transaction
 		return $this->purchaseId;
 	}
 
+	protected function setPurchaseId($purchaseId)
+	{
+		if (!preg_match('/^([0-9][a-z]){1,16}$/i', $purchaseId)) {
+			throw new InvalidArgumentException('Purchase ID must be 1 to 16 characters and only letters/numbers. (' . $purchaseId . ')');
+		}
+
+		$this->purchaseId = $purchaseId;
+	}
+
 	public function getAmount()
 	{
 		return $this->amount;
+	}
+
+	protected function setAmount($amount)
+	{
+		if ( !(is_float($amount) && $amount > 0 && $amount =< 9999999999.99) ) {
+			throw new InvalidArgumentException('Amount must be a double above 0 and below 1000000000.00. (' . $amount . ')');
+		}
+
+		$this->amount = $amount;
 	}
 
 	public function getDescription()
@@ -52,14 +69,37 @@ class Transaction
 		return $this->description;
 	}
 
+	protected function setDescription($description)
+	{
+		if (strlen($description) == 0 || strlen($description) > 32) {
+			throw new InvalidArgumentException('Description must be 32 characters or less and cannot be empty. (' . $description . ')');
+		}
+
+		$this->description = $description;
+	}
+
 	public function getExpirationPeriod()
 	{
 		return $this->expirationPeriod;
 	}
 
+	protected function setExpirationPeriod(\DateInterval $expirationPeriod = null)
+	{
+		$this->expirationPeriod = $expirationPeriod;
+	}
+
 	public function getEntranceCode()
 	{
 		return $this->entranceCode;
+	}
+
+	protected function setEntranceCode($entranceCode = null)
+	{
+		if ($entranceCode != null && strlen($entranceCode) > 40) {
+			throw new InvalidArgumentException('Entrance code must be 40 characters or less. (' . $entranceCode . ')');
+		}
+
+		$this->entranceCode = $entranceCode;
 	}
 
 	public function getLanguage()
