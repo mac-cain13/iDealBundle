@@ -21,15 +21,16 @@ class Transaction
 
 	public function __construct($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
 	{
-		if (null == $initialState) {
-			$initialState = new TransactionStateNew( new \DateTime() );
-		}
-
-		$this->setState($initialState);
 		$this->setPurchaseId($purchaseId);
 		$this->setAmount($amount);
 		$this->setDescription($description);
 		$this->setExpirationPeriod($expirationPeriod);
+		$this->setEntranceCode($entranceCode);
+
+		if (null == $initialState) {
+			$initialState = new TransactionStateNew( new \DateTime() );
+		}
+		$this->setState($initialState);
 
 		// Fixed values, iDEAL currently doesn't support anything else for these properties.
 		$this->setLanguage('nl');
@@ -43,7 +44,7 @@ class Transaction
 
 	protected function setPurchaseId($purchaseId)
 	{
-		if (!preg_match('/^([0-9][a-z]){1,16}$/i', $purchaseId)) {
+		if (!preg_match('/^([0-9a-z]){1,16}$/i', $purchaseId)) {
 			throw new InvalidArgumentException('Purchase ID must be 1 to 16 characters and only letters/numbers. (' . $purchaseId . ')');
 		}
 
@@ -57,7 +58,7 @@ class Transaction
 
 	protected function setAmount($amount)
 	{
-		if ( !(is_float($amount) && $amount > 0 && $amount =< 9999999999.99) ) {
+		if ( !(is_float($amount) && $amount > 0 && $amount <= 9999999999.99) ) {
 			throw new InvalidArgumentException('Amount must be a double above 0 and below 1000000000.00. (' . $amount . ')');
 		}
 
@@ -85,6 +86,17 @@ class Transaction
 
 	protected function setExpirationPeriod(\DateInterval $expirationPeriod = null)
 	{
+		if ($expirationPeriod != null)
+		{
+			$dateTime = new \DateTime();
+			$timestamp = $dateTime->getTimestamp();
+			$intervalInSeconds = $dateTime->add($expirationPeriod)->getTimestamp() - $timestamp;
+
+			if ($intervalInSeconds < 60 || $intervalInSeconds > 3600) {
+				throw new InvalidArgumentException('Expiration period must be at least 1 minute and not more then 1 hour, 15 minutes is advised. (' . $intervalInSeconds . ' seconds)');
+			}
+		}
+
 		$this->expirationPeriod = $expirationPeriod;
 	}
 
@@ -95,8 +107,8 @@ class Transaction
 
 	protected function setEntranceCode($entranceCode = null)
 	{
-		if ($entranceCode != null && strlen($entranceCode) > 40) {
-			throw new InvalidArgumentException('Entrance code must be 40 characters or less. (' . $entranceCode . ')');
+		if ($entranceCode != null && !preg_match('/^([0-9a-z]){1,40}$/i', $entranceCode)) {
+			throw new InvalidArgumentException('Entrance code must be 40 characters and only letters/numbers. (' . $entranceCode . ')');
 		}
 
 		$this->entranceCode = $entranceCode;

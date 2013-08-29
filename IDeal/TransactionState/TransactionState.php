@@ -13,8 +13,6 @@ interface TransactionState
 	const STATE_EXPIRED = 'Expired';
 	const STATE_FAILURE = 'Failure';
 
-	public function __construct(\DateTime $timestamp);
-
 	public function getTimestamp();
 	public function getTransactionId();
 	public function getConsumer();

@@ -3,6 +3,7 @@
 namespace Wrep\IDealBundle\Tests\IDeal;
 
 use Wrep\IDealBundle\IDeal\Transaction;
+use Wrep\IDealBundle\IDeal\TransactionState\TransactionState;
 use Wrep\IDealBundle\Exception\InvalidArgumentException;
 
 class TransactionTest extends \PHPUnit_Framework_TestCase
@@ -19,19 +20,18 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
 
 	public function validConstructorData()
 	{
-		$newState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionStateNew')
+		$newState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateNew')
 							->disableOriginalConstructor()
 							->getMock();
-		$openState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionStateOpen')
+		$openState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateOpen')
 							->disableOriginalConstructor()
 							->getMock();
-		$successState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionStateSuccess')
+		$successState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
 							->disableOriginalConstructor()
 							->getMock();
 
 		return array(
 			array('1', 0.01, '1.000 Test credits', null, null, null),
-			array('-1', 0.01, '1.000 Test credits', null, null, null),
 			array('Id123', 0.01, '1.000 Test credits', null, null, null),
 
 			array('1', 1.00, '1.000 Test credits', null, null, null),
@@ -69,6 +69,7 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
 	{
 		return array(
 			array(null, 0.01, '1.000 Test credits', null, null, null),
+			array('-1', 0.01, '1.000 Test credits', null, null, null),
 			array('a b', 0.01, '1.000 Test credits', null, null, null),
 			array('#3', 0.01, '1.000 Test credits', null, null, null),
 

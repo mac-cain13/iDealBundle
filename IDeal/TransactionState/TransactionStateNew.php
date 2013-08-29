@@ -19,6 +19,11 @@ class TransactionStateNew implements TransactionState
 		return $this->timestamp;
 	}
 
+	public function getTransactionId()
+	{
+		return null;
+	}
+
 	public function getConsumer()
 	{
 		return null;
