@@ -31,9 +31,9 @@ class Transaction
 		$this->setDescription($description);
 		$this->setExpirationPeriod($expirationPeriod);
 
-		// TODO: Deze kunnen nu nog vast zijn, kan toch niks anders zijn...
-		$this->language = 'nl';
-		$this->currency = 'EUR';
+		// Fixed values, iDEAL currently doesn't support anything else for these properties.
+		$this->setLanguage('nl');
+		$this->setCurrency('EUR');
 	}
 
 	public function getPurchaseId()
@@ -107,9 +107,21 @@ class Transaction
 		return $this->language;
 	}
 
+	public function setLanguage($language)
+	{
+		// TODO: Should be validated, probably with a ISO639 object/class
+		$this->language = $language;
+	}
+
 	public function getCurrency()
 	{
 		return $this->currency;
+	}
+
+	public function setCurrency($currency)
+	{
+		// TODO: Should be validated, probably with a ISO4217 object/class
+		$this->currency = $currency;
 	}
 
 	/*** State stuff starts here ***/
