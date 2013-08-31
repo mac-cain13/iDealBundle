@@ -94,9 +94,102 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
 	/**
 	 * @dataProvider validConstructorData
 	 */
-	// public function testGetId($id, $subId, $certificatePath, $certificatePassphrase)
-	// {
-	// 	$merchant = new Merchant($id, $subId, $certificatePath, $certificatePassphrase);
-	// 	$this->assertEquals($id, $merchant->getId(), 'Merchant ID getter returned unexpected value.');
-	// }
+	public function testGetPurchaseId($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
+	{
+		$transaction = new Transaction($purchaseId, $amount, $description, $expirationPeriod, $entranceCode, $initialState);
+		$this->assertEquals($purchaseId, $transaction->getPurchaseId(), 'Transaction Purchase ID getter returned unexpected value.');
+	}
+
+	/**
+	 * @dataProvider validConstructorData
+	 */
+	public function testGetAmount($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
+	{
+		$transaction = new Transaction($purchaseId, $amount, $description, $expirationPeriod, $entranceCode, $initialState);
+		$this->assertEquals($amount, $transaction->getAmount(), 'Transaction amount getter returned unexpected value.');
+	}
+
+	/**
+	 * @dataProvider validConstructorData
+	 */
+	public function testGetDescription($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
+	{
+		$transaction = new Transaction($purchaseId, $amount, $description, $expirationPeriod, $entranceCode, $initialState);
+		$this->assertEquals($description, $transaction->getDescription(), 'Transaction description getter returned unexpected value.');
+	}
+
+	/**
+	 * @dataProvider validConstructorData
+	 */
+	public function testGetEntranceCode($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
+	{
+		$transaction = new Transaction($purchaseId, $amount, $description, $expirationPeriod, $entranceCode, $initialState);
+		$this->assertEquals($entranceCode, $transaction->getEntranceCode(), 'Transaction entrance code getter returned unexpected value.');
+	}
+
+	/*** State related tests ***/
+
+	/**
+	 * @dataProvider validConstructorData
+	 */
+	public function testGetState($purchaseId, $amount, $description, \DateInterval $expirationPeriod = null, $entranceCode = null, TransactionState $initialState = null)
+	{
+		$transaction = new Transaction($purchaseId, $amount, $description, $expirationPeriod, $entranceCode, $initialState);
+
+		if ($initialState != null) {
+			$this->assertEquals($initialState, $transaction->getState(), 'Transaction state getter returned unexpected value.');
+		} else {
+			$this->assertInstanceOf('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateNew', $transaction->getState());
+		}
+	}
+
+	public function testGetStateTimestamp()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$timestamp = new \DateTime();
+
+		$mockState->expects($this->once())
+					->method('getTimestamp')
+					->will( $this->returnValue($timestamp) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$this->assertEquals($timestamp, $transaction->getStateTimestamp(), 'Transaction timestamp getter returned unexpected value.');
+	}
+
+	public function testGetTransactionId()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$transactionId = 123;
+
+		$mockState->expects($this->once())
+					->method('getTransactionId')
+					->will( $this->returnValue($transactionId) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$this->assertEquals($transactionId, $transaction->getTransactionId(), 'Transaction transaction ID getter returned unexpected value.');
+	}
+
+	public function testGetConsumer()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$consumer = $this->getMockBuilder('Wrep\IDealBundle\IDeal\Consumer')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockState->expects($this->once())
+					->method('getConsumer')
+					->will( $this->returnValue($consumer) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$this->assertEquals($consumer, $transaction->getConsumer(), 'Transaction consumer getter returned unexpected value.');
+	}
 }

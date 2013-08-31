@@ -147,9 +147,14 @@ class Transaction
 		$this->state = $state;
 	}
 
-	public function getTimestamp()
+	public function getStateTimestamp()
 	{
 		return $this->getState()->getTimestamp();
+	}
+
+	public function getTransactionId()
+	{
+		return $this->getState()->getTransactionId();
 	}
 
 	public function getConsumer()
