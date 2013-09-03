@@ -29,7 +29,8 @@
 		"cdatazone/xmlseclibs": "dev-master"
 	},
 	"require-dev": {
-		"symfony/yaml": ">=2.1"
+		"symfony/yaml": ">=2.1",
+		"phpunit/phpunit": "3.7.*"
 	},
 	"autoload": {
 		"psr-0": { "Wrep\\IDealBundle": "" }
