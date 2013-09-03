@@ -21,7 +21,7 @@ abstract class TransactionStateFinal implements TransactionState
 
 	public function getTransactionId()
 	{
-		return $this->transactionId;
+		return null;
 	}
 
 	public function getConsumer()

@@ -7,8 +7,6 @@ use Wrep\IDealBundle\Exception\InvalidArgumentException;
 use Wrep\IDealBundle\IDeal\TransactionState\TransactionState;
 use Wrep\IDealBundle\IDeal\TransactionState\TransactionStateNew;
 
-// TODO: Interface van maken zodat je m zelf kunt implementeren
-//  (als Doctrine Entity bijvoorbeeld)
 class Transaction
 {
 	private $purchaseId;
