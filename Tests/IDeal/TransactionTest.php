@@ -192,4 +192,119 @@ class TransactionTest extends \PHPUnit_Framework_TestCase
 		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
 		$this->assertEquals($consumer, $transaction->getConsumer(), 'Transaction consumer getter returned unexpected value.');
 	}
+
+	public function testSetOpen()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateNew')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockResultState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateOpen')
+								->disableOriginalConstructor()
+								->getMock();
+
+		$timestamp = new \DateTime();
+
+		$mockState->expects($this->once())
+					->method('setOpen')
+					->with( $this->equalTo($timestamp),
+							$this->equalTo(123) )
+					->will( $this->returnValue($mockResultState) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$transaction->setOpen($timestamp, 123);
+		$this->assertEquals($mockState, $transaction->getState(), 'Transaction setOpen didn\'t change state to the expected value.');
+	}
+
+	public function testSetSuccess()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateOpen')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockResultState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+								->disableOriginalConstructor()
+								->getMock();
+
+		$timestamp = new \DateTime();
+		$consumer = $this->getMockBuilder('Wrep\IDealBundle\IDeal\Consumer')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockState->expects($this->once())
+					->method('setSuccess')
+					->with( $this->equalTo($timestamp),
+							$this->equalTo($consumer) )
+					->will( $this->returnValue($mockResultState) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$transaction->setSuccess($timestamp, $consumer);
+		$this->assertEquals($mockState, $transaction->getState(), 'Transaction setSuccess didn\'t change state to the expected value.');
+	}
+
+	public function testSetCancelled()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateOpen')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockResultState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+								->disableOriginalConstructor()
+								->getMock();
+
+		$timestamp = new \DateTime();
+
+		$mockState->expects($this->once())
+					->method('setCancelled')
+					->with( $this->equalTo($timestamp) )
+					->will( $this->returnValue($mockResultState) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$transaction->setCancelled($timestamp);
+		$this->assertEquals($mockState, $transaction->getState(), 'Transaction setCancelled didn\'t change state to the expected value.');
+	}
+
+	public function testSetExpired()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateOpen')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockResultState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+								->disableOriginalConstructor()
+								->getMock();
+
+		$timestamp = new \DateTime();
+
+		$mockState->expects($this->once())
+					->method('setExpired')
+					->with( $this->equalTo($timestamp) )
+					->will( $this->returnValue($mockResultState) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$transaction->setExpired($timestamp);
+		$this->assertEquals($mockState, $transaction->getState(), 'Transaction setExpired didn\'t change state to the expected value.');
+	}
+
+	public function testSetFailed()
+	{
+		$mockState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateOpen')
+							->disableOriginalConstructor()
+							->getMock();
+
+		$mockResultState = $this->getMockBuilder('Wrep\IDealBundle\IDeal\TransactionState\TransactionStateSuccess')
+								->disableOriginalConstructor()
+								->getMock();
+
+		$timestamp = new \DateTime();
+
+		$mockState->expects($this->once())
+					->method('setFailed')
+					->with( $this->equalTo($timestamp) )
+					->will( $this->returnValue($mockResultState) );
+
+		$transaction = new Transaction('1', 0.01, '1.000 Test credits', null, null, $mockState);
+		$transaction->setFailed($timestamp);
+		$this->assertEquals($mockState, $transaction->getState(), 'Transaction Failed didn\'t change state to the expected value.');
+	}
 }
