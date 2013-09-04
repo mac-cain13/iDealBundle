@@ -3,7 +3,8 @@
 namespace Wrep\IDealBundle\IDeal\Request;
 
 use Wrep\IDealBundle\IDeal\Merchant;
-use Wrep\IDealBundle\IDeal\IssuerId;
+use Wrep\IDealBundle\IDeal\BIC;
+use Wrep\IDealBundle\IDeal\Transaction;
 
 abstract class BaseRequest
 {
@@ -12,7 +13,7 @@ abstract class BaseRequest
 	const TYPE_STATUS = 'AcquirerStatusReq';
 
 	private $requestType;
-	private $issuer;
+	private $bic;
 	private $merchant;
 	private $transaction;
 	private $returnUrl;
@@ -52,9 +53,9 @@ abstract class BaseRequest
 		$this->merchant = $merchant;
 	}
 
-	protected function setIssuer(IssuerId $issuer)
+	protected function setBIC(BIC $bic)
 	{
-		$this->issuer = $issuer;
+		$this->bic = $bic;
 	}
 
 	protected function setTransaction(Transaction $transaction)
@@ -72,7 +73,44 @@ abstract class BaseRequest
 		$this->returnUrl = $returnUrl;
 	}
 
+	public function getHeaders()
+	{
+		return array('Content-Type'	=> 'text/xml; charset="utf-8"',
+					 'Accept'		=> 'text/xml');
+	}
+
 	/**
+	 * The fully signed message as XML string
+	 *
+	 * @return string
+	 */
+	public function getContent()
+	{
+		// Create the basic XML structure
+		$xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $this->requestType . ' />');
+		$xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
+		$xml->addAttribute('version', '3.3.1');
+
+		// Add the creation timestamp
+		$this->addCreateDateTimestamp();
+
+		// Add other elements
+		if ($this->bic) {
+			$this->addIssuerElement($xml);
+		}
+
+		if ($this->merchant) {
+			$this->addMerchantElement($xml);
+		}
+
+		if ($this->transaction) {
+			$this->addTransactionElement($xml);
+		}
+
+		return $this->signXml($xml)->asXML();
+	}
+
+		/**
 	 * Adds the createDateTimestamp element to the XML containing the current time as ISO8601 string in UTC timezone
 	 *
 	 * @return \SimpleXMLElement The added createDateTimestamp element
@@ -91,7 +129,7 @@ abstract class BaseRequest
 	protected function addIssuerElement(\SimpleXMLElement $xml)
 	{
 		$issuerXml = $xml->addChild('Issuer');
-		$issuerXml->addChild('issuerID', $this->issuer->getId() );
+		$issuerXml->addChild('issuerID', $this->bic->getCode() );
 
 		return $issuerXml;
 	}
@@ -164,42 +202,5 @@ abstract class BaseRequest
 
 		// Convert back to SimpleXMLElement and return
 		return new \SimpleXMLElement( $xml->saveXML() );
-	}
-
-	public function getHeaders()
-	{
-		return array('Content-Type'	=> 'text/xml; charset="utf-8"',
-					 'Accept'		=> 'text/xml');
-	}
-
-	/**
-	 * The fully signed message as XML string
-	 *
-	 * @return string
-	 */
-	public function getContent()
-	{
-		// Create the basic XML structure
-		$xml = new \SimpleXMLElement('<?xml version="1.0" encoding="UTF-8"?><' . $this->requestType . ' />');
-		$xml->addAttribute('xmlns', 'http://www.idealdesk.com/ideal/messages/mer-acq/3.3.1');
-		$xml->addAttribute('version', '3.3.1');
-
-		// Add the creation timestamp
-		$this->addCreateDateTimestamp();
-
-		// Add other elements
-		if ($this->issuer) {
-			$this->addIssuerElement($xml);
-		}
-
-		if ($this->merchant) {
-			$this->addMerchantElement($xml);
-		}
-
-		if ($this->transaction) {
-			$this->addTransactionElement($xml);
-		}
-
-		return $this->signXml($xml)->asXML();
 	}
 }

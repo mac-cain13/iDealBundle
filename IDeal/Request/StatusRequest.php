@@ -13,7 +13,7 @@ class StatusRequest extends BaseRequest
 		$this->setTransaction($transaction);
 	}
 
-	public function addTransactionElement(\SimpleXMLElement $xml)
+	protected function addTransactionElement(\SimpleXMLElement $xml)
 	{
 		$transactionXml = $xml->addChild('Transaction');
 		$transactionXml->addChild('transactionID', $this->transaction->getTransactionId() );
