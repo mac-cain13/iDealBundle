@@ -4,7 +4,7 @@
 ## When to use?
 Use this iDEAL Bundle when you need to implement the iDEALv3 protocol and want full control over all behaviour. For example when implementing [Rabobank iDEAL Professional](https://www.rabobank.nl/bedrijven/producten/betalen_en_ontvangen/geld_ontvangen/ideal/) or [ING iDEAL Advanced](http://www.ing.nl/zakelijk/betalen/geld-ontvangen/ideal/index.aspx).
 
-## Why use this
+## Why use this bundle?
 1. This bundle can generate the needed certificates for you
 2. Build with the new iDEAL v3.3.1 in mind
 3. Well documented, tested with unit tests and nice Object-Oriented structure
