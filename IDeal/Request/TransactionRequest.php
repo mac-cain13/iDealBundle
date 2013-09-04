@@ -10,7 +10,7 @@ class TransactionRequest extends BaseRequest
 {
 	public function __construct(Merchant $merchant, Transaction $transaction, IssuerId $issuer, $returnUrl)
 	{
-		parent::__construct(BaseRequest::TYPE_STATUS, $merchant);
+		parent::__construct(BaseRequest::TYPE_TRANSACTION, $merchant);
 		$this->setTransaction($transaction);
 		$this->setIssuer($issuer);
 		$this->setReturnUrl($returnUrl);

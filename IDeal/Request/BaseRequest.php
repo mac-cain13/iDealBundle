@@ -27,6 +27,12 @@ abstract class BaseRequest
 	 */
 	public function __construct($requestType, Merchant $merchant)
 	{
+		$this->setRequestType($requestType);
+		$this->setMerchant($merchant);
+	}
+
+	protected function setRequestType($requestType)
+	{
 		// Validate request type
 		if ($requestType == null) {
 			throw new \RuntimeException('No request type given.');
@@ -34,14 +40,7 @@ abstract class BaseRequest
 			throw new \RuntimeException('Request type must be alphanumeric. (' . $requestType . ')');
 		}
 
-		// Save properties
 		$this->requestType = $requestType;
-		$this->setMerchant($merchant);
-	}
-
-	protected function setIssuer(IssuerId $issuer)
-	{
-		$this->issuer = $issuer;
 	}
 
 	protected function setMerchant(Merchant $merchant)
@@ -51,6 +50,11 @@ abstract class BaseRequest
 		}
 
 		$this->merchant = $merchant;
+	}
+
+	protected function setIssuer(IssuerId $issuer)
+	{
+		$this->issuer = $issuer;
 	}
 
 	protected function setTransaction(Transaction $transaction)
@@ -73,7 +77,7 @@ abstract class BaseRequest
 	 *
 	 * @return \SimpleXMLElement The added createDateTimestamp element
 	 */
-	private function addCreateDateTimestamp()
+	protected function addCreateDateTimestamp()
 	{
 		// Create the UTC ISO8601 timestamp (iDeal style)
 		$utcTime = new \DateTime('now');
@@ -84,7 +88,7 @@ abstract class BaseRequest
 		return $this->xml->addChild('createDateTimestamp', $timestamp);
 	}
 
-	public function addIssuerElement(\SimpleXMLElement $xml)
+	protected function addIssuerElement(\SimpleXMLElement $xml)
 	{
 		$issuerXml = $xml->addChild('Issuer');
 		$issuerXml->addChild('issuerID', $this->issuer->getId() );
@@ -97,7 +101,7 @@ abstract class BaseRequest
 	 *
 	 * @return \SimpleXMLElement The added Merchant element
 	 */
-	public function addMerchantElement(\SimpleXMLElement $xml)
+	protected function addMerchantElement(\SimpleXMLElement $xml)
 	{
 		$merchantXml = $xml->addChild('Merchant');
 		$merchantXml->addChild('merchantID', sprintf('%09d', $this->merchant->getId()) );
@@ -110,7 +114,7 @@ abstract class BaseRequest
 		return $merchantXml;
 	}
 
-	public function addTransactionElement(\SimpleXMLElement $xml)
+	protected function addTransactionElement(\SimpleXMLElement $xml)
 	{
 		$transactionXml = $xml->addChild('Transaction');
 		$transactionXml->addChild('purchaseID', $this->transaction->getPurchaseId() );
