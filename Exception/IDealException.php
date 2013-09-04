@@ -2,5 +2,5 @@
 
 namespace Wrep\IDealBundle\Exception;
 
-class IDealException extends \RuntimeException
+class IDealException extends \RuntimeException implements Exception
 {}
