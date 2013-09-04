@@ -6,6 +6,8 @@ use Wrep\IDealBundle\IDeal\Merchant;
 use Wrep\IDealBundle\IDeal\BIC;
 use Wrep\IDealBundle\IDeal\Transaction;
 
+use Wrep\IDealBundle\Exception\InvalidArgumentException;
+
 abstract class BaseRequest
 {
 	const TYPE_DIRECTORY = 'DirectoryReq';
@@ -36,9 +38,9 @@ abstract class BaseRequest
 	{
 		// Validate request type
 		if ($requestType == null) {
-			throw new \RuntimeException('No request type given.');
+			throw new InvalidArgumentException('No request type given.');
 		} else if ( !ctype_alnum($requestType) ) {
-			throw new \RuntimeException('Request type must be alphanumeric. (' . $requestType . ')');
+			throw new InvalidArgumentException('Request type must be alphanumeric. (' . $requestType . ')');
 		}
 
 		$this->requestType = $requestType;
@@ -47,7 +49,7 @@ abstract class BaseRequest
 	protected function setMerchant(Merchant $merchant)
 	{
 		if (null == $merchant) {
-			throw new \RuntimeException('Merchant cannot be null.');
+			throw new InvalidArgumentException('Merchant cannot be null.');
 		}
 
 		$this->merchant = $merchant;
@@ -66,8 +68,8 @@ abstract class BaseRequest
 	protected function setReturnUrl($returnUrl)
 	{
 		// Validate the merchant return URL
-		if ( strlen((string)$returnURL) > 512 ) {
-			throw new \RuntimeException('The merchant return URL must be a string of 512 characters or less. (' . $returnURL . ')');
+		if (!is_string($returnUrl) || strlen($returnURL) > 512) {
+			throw new InvalidArgumentException('The merchant return URL must be a string of 512 characters or less. (' . $returnURL . ')');
 		}
 
 		$this->returnUrl = $returnUrl;
@@ -110,7 +112,7 @@ abstract class BaseRequest
 		return $this->signXml($xml)->asXML();
 	}
 
-		/**
+	/**
 	 * Adds the createDateTimestamp element to the XML containing the current time as ISO8601 string in UTC timezone
 	 *
 	 * @return \SimpleXMLElement The added createDateTimestamp element
