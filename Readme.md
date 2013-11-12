@@ -1,4 +1,4 @@
-# iDEAL Bundle for Symfony [![Build Status of master](https://travis-ci.org/wrep/iDealBundle.png?branch=master)](https://travis-ci.org/wrep/iDealBundle)
+# iDEAL Bundle for Symfony [![Build Status of master](https://travis-ci.org/mac-cain13/iDealBundle.png?branch=master)](https://travis-ci.org/wrep/iDealBundle)
 **iDEAL Bundle for Symfony makes implementing iDEAL v3.3.1 a breeze.**
 
 ## Warning
