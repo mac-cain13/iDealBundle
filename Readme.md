@@ -1,6 +1,9 @@
 # iDEAL Bundle for Symfony [![Build Status of master](https://travis-ci.org/wrep/iDealBundle.png?branch=master)](https://travis-ci.org/wrep/iDealBundle)
 **iDEAL Bundle for Symfony makes implementing iDEAL v3.3.1 a breeze.**
 
+## Warning
+**This is a work in progress**, it's used in some production sites, but there are some things still unfinished. So use at your own risk!
+
 ## When to use?
 Use this iDEAL Bundle when you need to implement the iDEALv3 protocol and want full control over all behaviour. For example when implementing [Rabobank iDEAL Professional](https://www.rabobank.nl/bedrijven/producten/betalen_en_ontvangen/geld_ontvangen/ideal/) or [ING iDEAL Advanced](http://www.ing.nl/zakelijk/betalen/geld-ontvangen/ideal/index.aspx).
 
@@ -10,7 +13,7 @@ Use this iDEAL Bundle when you need to implement the iDEALv3 protocol and want f
 3. Well documented, tested with unit tests and nice Object-Oriented structure
 
 ## Installation
-Installation with [Composer](http://getcomposer.org) is recommended. Run the require command to add Notificato to your project:
+Installation with [Composer](http://getcomposer.org) is recommended. Run the require command to add the iDealBundle to your project:
 
 `composer require wrep/ideal-bundle`
 
